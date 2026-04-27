@@ -1,5 +1,5 @@
 /* ============================================================
-   MT Workflow — Main App
+   MDT Workflow — Main App
    ============================================================ */
 
 const App = (() => {
@@ -1081,7 +1081,7 @@ const App = (() => {
 
   // ---------- Apps Script code (shown in settings) ----------
   const APPS_SCRIPT_CODE = `/**
- * MT Workflow — Google Apps Script Backend
+ * MDT Workflow — Google Apps Script Backend
  * วาง script นี้ใน Apps Script ของ Google Sheet แล้ว Deploy เป็น Web App
  *
  * คำแนะนำ: ตั้งค่า SECRET ให้ตรงกับในเว็บ (ถ้าต้องการความปลอดภัย)
