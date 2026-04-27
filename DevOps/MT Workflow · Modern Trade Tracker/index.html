@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="คลังความรู้ Modern Trade — รวบรวมข้อมูล วิธีการทำงาน สามารถเพิ่มและแก้ไขข้อมูลได้ตลอด" />
+  <title>MT Knowledge Base · คลังความรู้ Modern Trade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23E85D1F'/><path d='M8 22V10l4 6 4-6v12M20 10v12M20 10l4 4-4 4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+</head>
+<body>
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-label="MT Knowledge Base logo">
+        <rect width="32" height="32" rx="8" fill="currentColor"/>
+        <path d="M8 22V10l4 6 4-6v12M20 10v12M20 10l4 4-4 4" stroke="var(--color-surface)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-title">MT Knowledge Base</span>
+        <span class="brand-sub">Modern Trade Wiki</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="workflows">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>คลังความรู้</span>
+      </button>
+      <div class="nav-submenu" aria-label="Modern Trade channels">
+        <div class="nav-submenu-label">Modern Trade Channels</div>
+        <div class="channel-submenu" id="channelSubmenu"></div>
+      </div>
+      <button class="nav-item" data-view="timeline">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M18 6H8a2 2 0 000 4h8a2 2 0 010 4H6"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+        <span>Workflow Timeline</span>
+      </button>
+      <button class="nav-item" data-view="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+        <span>ภาพรวมสถิติ</span>
+      </button>
+      <button class="nav-item" data-view="settings" id="navSettings" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sync-status" id="syncStatus">
+        <span class="dot dot-offline"></span>
+        <div class="sync-text">
+          <span class="sync-label">ยังไม่ได้เชื่อม Sheet</span>
+          <span class="sync-sub">ทำงานแบบ Local</span>
+        </div>
+      </div>
+      <div class="sidebar-footer-controls">
+        <button class="btn btn-ghost btn-sm admin-access-btn" id="btnAdminAccess">Unlock Admin</button>
+        <button class="theme-toggle" data-theme-toggle aria-label="สลับโหมดสี">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <button class="icon-btn" id="menuToggle" aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <span class="mobile-title">MT Knowledge Base</span>
+      <button class="icon-btn" data-theme-toggle aria-label="สลับโหมดสี">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+
+    <!-- ============ VIEW: WORKFLOWS ============ -->
+    <section class="view view-workflows active" data-view-content="workflows">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">Knowledge Base</span>
+          <h1 class="page-title">คลังความรู้ Modern Trade</h1>
+          <p class="page-sub">รวบรวมข้อมูล วิธีการทำงาน และแนวทางปฏิบัติต่างๆ เพิ่มแก้ไขได้ตลอดเวลา</p>
+        </div>
+        <button class="btn btn-primary" id="btnNewWorkflow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          เพิ่มข้อมูลใหม่
+        </button>
+      </header>
+
+      <div class="channel-context" id="channelContext" hidden>
+        <div>
+          <span class="channel-context-label">Selected Channel</span>
+          <h2 id="channelContextTitle">ทุกช่องทาง</h2>
+          <p id="channelContextMeta">กำลังแสดงข้อมูลทั้งหมดใน Modern Trade</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btnClearChannelFilter">ดูทุกช่องทาง</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="ค้นหาข้อมูลในคลังความรู้..." />
+        </div>
+        <div class="filter-group">
+          <select id="filterChannel" class="select-input">
+            <option value="">ทุกช่องทาง / ลูกค้า</option>
+          </select>
+          <select id="filterStatus" class="select-input">
+            <option value="">ทุกสถานะ</option>
+            <option value="draft">ร่าง</option>
+            <option value="active">ใช้งาน</option>
+            <option value="paused">พัก</option>
+            <option value="archived">เก็บถาวร</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Workflow grid -->
+      <div class="workflow-grid" id="workflowGrid"></div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState" hidden>
+        <div class="empty-icon">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <h3>ยังไม่มีข้อมูลในคลังความรู้</h3>
+        <p>เริ่มเพิ่มข้อมูลความรู้เรื่องแรกของคุณได้ทันที</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary" onclick="App.openWorkflowEditor()">เพิ่มข้อมูลใหม่</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: TIMELINE ============ -->
+    <section class="view view-timeline" data-view-content="timeline">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">Workflow Timeline</span>
+          <h1 class="page-title">ดู Workflow แบบไทม์ไลน์</h1>
+          <p class="page-sub">ไล่ดูหัวข้อและขั้นตอนของแต่ละ workflow ตามลำดับ เพื่ออ่านภาพรวม operation ได้เร็วขึ้น</p>
+        </div>
+      </header>
+
+      <div class="timeline-summary" id="timelineSummary"></div>
+      <div class="timeline-list" id="timelineList"></div>
+    </section>
+
+    <!-- ============ VIEW: DASHBOARD ============ -->
+    <section class="view view-dashboard" data-view-content="dashboard">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">Dashboard</span>
+          <h1 class="page-title">ภาพรวมคลังความรู้</h1>
+          <p class="page-sub">สรุปสถิติข้อมูลและเรื่องต่างๆ ในระบบ</p>
+        </div>
+      </header>
+
+      <div class="dashboard-summary" id="dashboardSummary"></div>
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="dashboard-row">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>ช่องทางที่มีข้อมูลมากที่สุด</h3>
+          </div>
+          <div class="panel-body" id="categoryBreakdown"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>ประเภทงานในคลังความรู้</h3>
+          </div>
+          <div class="panel-body" id="workCategoryBreakdown"></div>
+        </div>
+      </div>
+
+      <div class="dashboard-row dashboard-row-secondary">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>กิจกรรมล่าสุด</h3>
+          </div>
+          <div class="panel-body" id="recentActivity"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SETTINGS ============ -->
+    <section class="view view-settings" data-view-content="settings">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">Settings</span>
+          <h1 class="page-title">ตั้งค่า</h1>
+          <p class="page-sub">เชื่อมต่อ Google Sheets เพื่อ sync ข้อมูลแบบ cloud</p>
+        </div>
+      </header>
+
+      <div class="settings-grid">
+        <div class="panel panel-accent">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <div class="panel-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg>
+              </div>
+              <div>
+                <h3>Google Sheets Sync</h3>
+                <p class="panel-sub">เชื่อมต่อเพื่อเก็บข้อมูลบน cloud แก้ไขจากที่ไหนก็ได้</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label for="sheetUrl">Apps Script Web App URL</label>
+              <input type="url" id="sheetUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec" />
+              <span class="form-hint">ดูขั้นตอนการติดตั้งด้านล่าง แล้วนำ URL ที่ได้มาใส่ที่นี่</span>
+            </div>
+            <div class="form-group">
+              <label for="sheetSecret">Secret Token (ไม่บังคับ)</label>
+              <input type="text" id="sheetSecret" placeholder="รหัสที่ตั้งไว้ใน Apps Script" />
+              <span class="form-hint">เพิ่มความปลอดภัย ตั้งให้ตรงกับในสคริปต์</span>
+            </div>
+            <div class="button-row">
+              <button class="btn btn-primary" id="btnSaveSettings">บันทึกและทดสอบเชื่อมต่อ</button>
+              <button class="btn btn-ghost" id="btnSyncNow">Sync ข้อมูลทั้งหมดขึ้น Sheet</button>
+              <button class="btn btn-ghost" id="btnPullFromSheet">ดึงข้อมูลจาก Sheet</button>
+            </div>
+            <div class="connection-status" id="connectionStatus"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>คู่มือการติดตั้ง Google Sheets</h3>
+          </div>
+          <div class="panel-body setup-guide">
+            <ol class="guide-steps">
+              <li>
+                <strong>สร้าง Google Sheet ใหม่</strong>
+                <p>ไปที่ <a href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a> สร้าง Sheet เปล่า ตั้งชื่อว่า <code>MT Knowledge Base DB</code></p>
+              </li>
+              <li>
+                <strong>เปิด Apps Script</strong>
+                <p>ในหน้า Sheet เลือกเมนู <code>Extensions → Apps Script</code></p>
+              </li>
+              <li>
+                <strong>วางสคริปต์</strong>
+                <p>ลบโค้ดเดิมออก แล้วคัดลอกสคริปต์ด้านล่างวางลงไป</p>
+                <button class="btn btn-sm btn-ghost" id="btnCopyScript">📋 คัดลอกสคริปต์</button>
+                <pre class="code-block"><code id="appsScriptCode"></code></pre>
+              </li>
+              <li>
+                <strong>Deploy เป็น Web App</strong>
+                <p>กด <code>Deploy → New deployment</code> → เลือก type <code>Web app</code> → ตั้ง <code>Execute as: Me</code>, <code>Who has access: Anyone</code> → กด Deploy</p>
+              </li>
+              <li>
+                <strong>คัดลอก URL</strong>
+                <p>คัดลอก <code>Web app URL</code> ที่ได้ มาใส่ในช่อง <strong>Apps Script Web App URL</strong> ด้านบน แล้วกดบันทึก</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>ข้อมูล Local</h3>
+          </div>
+          <div class="panel-body">
+            <div class="button-row">
+              <button class="btn btn-ghost" id="btnExportJson">Export ข้อมูล (JSON)</button>
+              <button class="btn btn-ghost" id="btnImportJson">Import ข้อมูล (JSON)</button>
+              <input type="file" id="fileImport" accept=".json" hidden />
+              <button class="btn btn-danger-ghost" id="btnClearData">ล้างข้อมูลทั้งหมด</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== WORKFLOW EDITOR (Slide-over) ===================== -->
+  <div class="drawer-overlay" id="drawerOverlay" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="แก้ไข Workflow">
+    <header class="drawer-header">
+      <div class="drawer-head-left">
+        <button class="icon-btn" id="btnCloseDrawer" aria-label="ปิด">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <span class="drawer-breadcrumb" id="drawerBreadcrumb">ข้อมูลใหม่</span>
+      </div>
+      <div class="drawer-head-right">
+        <span class="save-indicator" id="saveIndicator"></span>
+        <button class="btn btn-ghost btn-sm" id="btnDeleteWorkflow" hidden>ลบ</button>
+        <button class="btn btn-primary btn-sm" id="btnSaveWorkflow">บันทึก</button>
+      </div>
+    </header>
+
+    <div class="drawer-body">
+      <!-- Workflow meta -->
+      <div class="editor-section">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="wfName">หัวข้อความรู้</label>
+            <input type="text" id="wfName" placeholder="เช่น กระบวนการสั่งซื้อสินค้าเข้า Lotus's" />
+          </div>
+          <div class="form-group">
+            <label for="wfChannel">ช่องทาง / ลูกค้า</label>
+            <select id="wfChannel" class="select-input">
+              <option value="Lotus's">Lotus's</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="wfStatus">สถานะ</label>
+            <select id="wfStatus" class="select-input">
+              <option value="draft">ร่าง</option>
+              <option value="active" selected>ใช้งาน</option>
+              <option value="paused">พัก</option>
+              <option value="archived">เก็บถาวร</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="wfCategory">หมวดหมู่ / ประเภทงาน</label>
+            <select id="wfCategory" class="select-input">
+              <option value="">เลือกหมวดหมู่ / ประเภทงาน</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="wfOwner">ผู้รับผิดชอบ</label>
+            <input type="text" id="wfOwner" placeholder="ชื่อ / ทีม" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="wfDescription">รายละเอียด / วัตถุประสงค์</label>
+          <textarea id="wfDescription" rows="2" placeholder="อธิบายสั้นๆ ว่าเรื่องนี้เกี่ยวกับอะไร ใช้ทำอะไร"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="wfTags">Tags <span class="label-hint">(คั่นด้วย comma)</span></label>
+          <input type="text" id="wfTags" placeholder="เช่น urgent, monthly, new-product" />
+        </div>
+      </div>
+
+      <!-- Steps section -->
+      <div class="editor-section">
+        <div class="section-title-row">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+            หัวข้อย่อย / เนื้อหา
+          </h3>
+          <span class="step-count" id="stepCount">0 หัวข้อย่อย</span>
+        </div>
+
+        <div class="steps-list" id="stepsList"></div>
+
+        <button class="btn btn-add-step" id="btnAddStep">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          เพิ่มหัวข้อย่อย
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== STEP DETAIL MODAL ===================== -->
+  <div class="modal-overlay" id="stepModalOverlay" hidden></div>
+  <div class="modal" id="stepModal" hidden role="dialog" aria-label="รายละเอียดขั้นตอน">
+    <header class="modal-header">
+      <div>
+        <span class="modal-eyebrow" id="stepModalEyebrow">หัวข้อย่อยที่ 1</span>
+        <h2 id="stepModalTitle">รายละเอียดหัวข้อย่อย</h2>
+      </div>
+      <button class="icon-btn" id="btnCloseStepModal" aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="stepTitle">ชื่อหัวข้อย่อย</label>
+        <input type="text" id="stepTitle" placeholder="เช่น ตรวจสอบเอกสารให้ครบถ้วน" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="stepOwner">ผู้ให้ข้อมูล</label>
+          <input type="text" id="stepOwner" placeholder="ชื่อ / ตำแหน่ง" />
+        </div>
+        <div class="form-group">
+          <label for="stepDuration">อ้างอิง</label>
+          <input type="text" id="stepDuration" placeholder="เช่น ประกาศบริษัท, Link" />
+        </div>
+        <div class="form-group">
+          <label for="stepStatus">สถานะความรู้</label>
+          <select id="stepStatus" class="select-input">
+            <option value="todo">รอตรวจสอบ</option>
+            <option value="doing">กำลังแก้ไข</option>
+            <option value="done">Verified (ถูกต้อง)</option>
+            <option value="blocked">Outdated (เก่า)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="stepDescription">รายละเอียด / คำอธิบาย</label>
+        <textarea id="stepDescription" rows="4" placeholder="อธิบายรายละเอียดของหัวข้อย่อยนี้..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Checklist</label>
+        <div class="checklist" id="stepChecklist"></div>
+        <div class="checklist-add">
+          <input type="text" id="checklistInput" placeholder="เพิ่มรายการย่อย..." />
+          <button class="btn btn-sm btn-primary" id="btnAddChecklist">เพิ่ม</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="stepTools">เครื่องมือ / ระบบที่ใช้</label>
+          <input type="text" id="stepTools" placeholder="เช่น SAP, Excel, B2B Portal" />
+        </div>
+        <div class="form-group">
+          <label for="stepDocuments">เอกสารที่เกี่ยวข้อง</label>
+          <input type="text" id="stepDocuments" placeholder="เช่น PO, Invoice, DO" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="stepLinks">Links <span class="label-hint">(คั่นด้วย comma)</span></label>
+        <input type="text" id="stepLinks" placeholder="https://... , https://..." />
+      </div>
+
+      <div class="form-group">
+        <label for="stepNotes">หมายเหตุ / ข้อควรระวัง</label>
+        <textarea id="stepNotes" rows="3" placeholder="ข้อควรระวัง เคล็ดลับ หรือปัญหาที่เคยเจอ"></textarea>
+      </div>
+    </div>
+    <footer class="modal-footer">
+      <button class="btn btn-danger-ghost" id="btnDeleteStep">ลบหัวข้อย่อยนี้</button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btnCancelStep">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnSaveStep">บันทึกหัวข้อย่อย</button>
+    </footer>
+  </div>
+
+  <div class="modal-overlay" id="adminModalOverlay" hidden></div>
+  <div class="modal modal-sm" id="adminModal" hidden role="dialog" aria-label="Admin Access">
+    <header class="modal-header">
+      <div>
+        <span class="modal-eyebrow">Role Gate</span>
+        <h2>ปลดล็อกสิทธิ์ Admin</h2>
+      </div>
+      <button class="icon-btn" id="btnCloseAdminModal" aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="modal-body">
+      <p class="admin-modal-copy">ใส่รหัส admin เพื่อเปิดเมนู Settings และจัดการการเชื่อมต่อระบบ</p>
+      <div class="form-group">
+        <label for="adminAccessCode">Admin Access Code</label>
+        <input type="password" id="adminAccessCode" placeholder="กรอกรหัส admin" />
+        <span class="form-hint">สิทธิ์นี้จะอยู่แค่ใน session ปัจจุบันของหน้าเว็บ</span>
+      </div>
+      <div class="connection-status" id="adminAccessStatus"></div>
+    </div>
+    <footer class="modal-footer">
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btnCancelAdminAccess">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnConfirmAdminAccess">ปลดล็อก</button>
+    </footer>
+  </div>
+
+  <!-- ===================== TOAST ===================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="transform:translate(-${scrollX}px,-${scrollY}px);transform-origin:top left">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>
