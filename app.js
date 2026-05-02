@@ -12,7 +12,7 @@ const App = (() => {
     'B2S',
     'Betrend',
     'CDS (701)',
-    'CDS (707)',
+    'CDS (709)',
     'HomePro',
     'OFM',
     "Lotus's",
