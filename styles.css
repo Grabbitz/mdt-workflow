@@ -77,11 +77,11 @@
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 
   /* ── Type scale ───────────────────────────── */
-  --text-xs:   11px;
-  --text-sm:   13px;
-  --text-base: 14px;
-  --text-lg:   16px;
-  --text-xl:   20px;
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 15px;
+  --text-lg:   17px;
+  --text-xl:   22px;
 
   /* ── Spacing (8px base) ───────────────────── */
   --space-1:  4px;
