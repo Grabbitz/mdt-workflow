@@ -377,11 +377,6 @@ const App = (() => {
     return `<span class="badge ${cls}">${label}</span>`;
   }
 
-  function stepStatusLabel(status) {
-    const map = { todo: 'รอตรวจสอบ', doing: 'กำลังแก้ไข', done: 'Verified', blocked: 'Outdated' };
-    return map[status] || status || '-';
-  }
-
   function channelBadge(chan) {
     const label = chan || 'Other';
     return `<span class="badge badge-orange">${escapeHtml(label)}</span>`;
@@ -402,8 +397,6 @@ const App = (() => {
     grid.innerHTML = list
       .map((w) => {
         const steps = w.steps || [];
-        const done = steps.filter((s) => s.status === 'done').length;
-        const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
         const tags = (w.tags || []).slice(0, 4);
         return `
           <article class="wf-card" data-id="${w.id}">
@@ -420,10 +413,7 @@ const App = (() => {
             ${w.description ? `<p class="wf-card-desc">${escapeHtml(w.description)}</p>` : ''}
             ${tags.length ? `<div class="tags-list">${tags.map((t) => `<span class="tag-pill">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
             <div class="wf-card-footer">
-              <div class="wf-progress-wrap">
-                <span>${steps.length} หัวข้อย่อย</span>
-                ${steps.length ? `<div class="wf-progress-bar"><div class="wf-progress-fill" style="width:${pct}%"></div></div><span>${pct}% Verified</span>` : ''}
-              </div>
+              <span>${steps.length} หัวข้อย่อย</span>
               <span>${formatDate(w.updatedAt || w.createdAt)}</span>
             </div>
           </article>
@@ -445,7 +435,6 @@ const App = (() => {
       (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
     );
     const totalSteps = list.reduce((sum, w) => sum + (w.steps || []).length, 0);
-    const verifiedSteps = list.reduce((sum, w) => sum + (w.steps || []).filter((s) => s.status === 'done').length, 0);
     const selectedChannel = state.filter.channel || 'ทุกช่องทาง';
 
     summary.innerHTML = `
@@ -456,10 +445,6 @@ const App = (() => {
       <div class="timeline-summary-card">
         <span>หัวข้อย่อย</span>
         <strong>${totalSteps}</strong>
-      </div>
-      <div class="timeline-summary-card">
-        <span>Verified</span>
-        <strong>${verifiedSteps}</strong>
       </div>
       <div class="timeline-summary-card wide">
         <span>มุมมองปัจจุบัน</span>
@@ -490,7 +475,6 @@ const App = (() => {
     listEl.innerHTML = channelOrder.map((channel) => {
       const workflows = grouped[channel];
       const channelStepCount = workflows.reduce((sum, w) => sum + (w.steps || []).length, 0);
-      const channelVerified = workflows.reduce((sum, w) => sum + (w.steps || []).filter((s) => s.status === 'done').length, 0);
       return `
         <section class="timeline-channel-group">
           <div class="timeline-channel-head">
@@ -501,7 +485,6 @@ const App = (() => {
             <div class="timeline-channel-stats">
               <span>${workflows.length} workflow</span>
               <span>${channelStepCount} steps</span>
-              <span>${channelVerified} verified</span>
             </div>
           </div>
           <div class="timeline-channel-list">
@@ -545,7 +528,7 @@ const App = (() => {
                 <span class="timeline-step-index">${stepIndex + 1}</span>
                 <div>
                   <strong>${escapeHtml(s.title || 'ยังไม่มีชื่อหัวข้อ')}</strong>
-                  <span>${escapeHtml(s.owner || 'ไม่ระบุผู้ให้ข้อมูล')} · ${escapeHtml(stepStatusLabel(s.status))}</span>
+                  <span>${escapeHtml(s.owner || 'ไม่ระบุผู้ให้ข้อมูล')}</span>
                 </div>
               </div>
             `).join('') : '<div class="timeline-step muted">ยังไม่มีหัวข้อย่อย</div>'}
@@ -564,11 +547,6 @@ const App = (() => {
     const paused = state.workflows.filter((w) => w.status === 'paused').length;
     const channelsWithData = new Set(state.workflows.map((w) => w.channel).filter(Boolean)).size;
     const totalSteps = state.workflows.reduce((sum, w) => sum + (w.steps || []).length, 0);
-    const doneSteps = state.workflows.reduce(
-      (sum, w) => sum + (w.steps || []).filter((s) => s.status === 'done').length,
-      0
-    );
-    const completion = totalSteps ? Math.round((doneSteps / totalSteps) * 100) : 0;
 
     if (summary) {
       summary.innerHTML = `
@@ -591,12 +569,7 @@ const App = (() => {
       <div class="stat-card">
         <div class="stat-label">หัวข้อย่อยทั้งหมด</div>
         <div class="stat-value">${totalSteps}</div>
-        <div class="stat-sub">${doneSteps} ตรวจสอบแล้ว</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">ความสมบูรณ์ (Verified)</div>
-        <div class="stat-value">${completion}%</div>
-        <div class="stat-sub">โดยรวม</div>
+        <div class="stat-sub">ใน ${total} เรื่อง</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Sync Status</div>
@@ -792,8 +765,6 @@ const App = (() => {
       .map((s, i) => {
         const owner = s.owner ? `<span>👤 ${escapeHtml(s.owner)}</span>` : '';
         const dur = s.duration ? `<span>⏱ ${escapeHtml(s.duration)}</span>` : '';
-        const statusMap = { todo: '⚪', doing: '🟡', done: '✅', blocked: '🔴' };
-        const statusLabelMap = { todo: 'รอตรวจสอบ', doing: 'กำลังแก้ไข', done: 'Verified', blocked: 'ข้อมูลเก่า' };
         const chk = s.checklist && s.checklist.length
           ? `<span>☑ ${s.checklist.filter((c) => c.done).length}/${s.checklist.length}</span>` : '';
         return `
@@ -805,7 +776,6 @@ const App = (() => {
             <div class="step-main">
               <span class="step-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</span>
               <div class="step-sub">
-                <span>${statusMap[s.status] || '⚪'} ${statusLabelMap[s.status] || 'รอตรวจสอบ'}</span>
                 ${owner}
                 ${dur}
                 ${chk}
@@ -871,7 +841,6 @@ const App = (() => {
       title: '',
       owner: '',
       duration: '',
-      status: 'todo',
       description: '',
       checklist: [],
       tools: '',
@@ -898,7 +867,6 @@ const App = (() => {
     $('#stepTitle').value = s.title || '';
     $('#stepOwner').value = s.owner || '';
     $('#stepDuration').value = s.duration || '';
-    $('#stepStatus').value = s.status || 'todo';
     $('#stepDescription').value = s.description || '';
     $('#stepTools').value = s.tools || '';
     $('#stepDocuments').value = s.documents || '';
@@ -923,7 +891,6 @@ const App = (() => {
     s.title = $('#stepTitle').value.trim();
     s.owner = $('#stepOwner').value.trim();
     s.duration = $('#stepDuration').value.trim();
-    s.status = $('#stepStatus').value;
     s.description = $('#stepDescription').value.trim();
     s.tools = $('#stepTools').value.trim();
     s.documents = $('#stepDocuments').value.trim();
