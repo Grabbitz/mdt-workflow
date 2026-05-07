@@ -207,8 +207,10 @@ const App = (() => {
     const gsiBtn = $('#gsiBtn');
     const fallback = $('#btnSignIn');
     if (gsiBtn) gsiBtn.style.display = adm ? 'none' : '';
-    if (fallback && adm) fallback.style.display = 'none';
+    if (fallback) fallback.style.display = adm ? 'none' : (gsiBtn?.children.length ? 'none' : '');
     $('#userChip').hidden = !adm;
+    const navSettings = $('#navSettings');
+    if (navSettings) navSettings.hidden = !adm;
     if (adm) {
       $('#userAvatar').textContent = (state.session.name || 'A')[0].toUpperCase();
       $('#userName').textContent = state.session.name || state.session.email || 'Admin';

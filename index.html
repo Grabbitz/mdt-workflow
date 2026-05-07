@@ -43,7 +43,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
         <span>ภาพรวมสถิติ</span>
       </button>
-      <button class="nav-item" data-view="settings" id="navSettings">
+      <button class="nav-item" data-view="settings" id="navSettings" hidden>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
         <span>Settings</span>
       </button>
@@ -62,33 +62,38 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
       </div>
+      <!-- Auth area — bottom of sidebar -->
+      <div class="sidebar-auth">
+        <div id="gsiBtn"></div>
+        <button class="sidebar-auth-btn" id="btnSignIn" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          <span>เข้าสู่ระบบ Admin</span>
+        </button>
+        <div class="sidebar-user" id="userChip" hidden>
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-info">
+            <span class="user-name" id="userName">-</span>
+            <span class="user-role-badge">Admin</span>
+          </div>
+          <button class="icon-btn" id="btnSignOut" title="ออกจากระบบ" style="margin-left:auto;flex-shrink:0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </aside>
 
   <!-- ===================== MAIN ===================== -->
   <main class="main">
-    <!-- Top bar -->
-    <div class="topbar">
-      <button class="icon-btn topbar-mobile-only" id="menuToggle" aria-label="เปิดเมนู">
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <button class="icon-btn" id="menuToggle" aria-label="เปิดเมนู">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
-      <span class="mobile-title topbar-mobile-only">MT Knowledge Base</span>
-      <div class="topbar-spacer"></div>
-      <div id="gsiBtn" style="min-height:36px;display:flex;align-items:center"></div>
-      <button class="btn btn-ghost btn-sm" id="btnSignIn" style="display:none;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-        เข้าสู่ระบบ Admin
+      <span class="mobile-title">MT Knowledge Base</span>
+      <button class="icon-btn" data-theme-toggle aria-label="สลับโหมดสี">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
-      <div class="user-chip" id="userChip" hidden>
-        <div class="user-avatar" id="userAvatar">A</div>
-        <div class="user-info">
-          <span class="user-name" id="userName">-</span>
-          <span class="user-role-badge">Admin</span>
-        </div>
-        <button class="icon-btn" id="btnSignOut" title="ออกจากระบบ" style="width:28px;height:28px;flex-shrink:0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
-      </div>
     </div>
 
     <!-- ============ VIEW: WORKFLOWS ============ -->
@@ -511,7 +516,7 @@
   <!-- ===================== TOAST ===================== -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=1d73e1e"></script>
+  <script src="app.js?v=2e9ba88"></script>
 <script data-pplx-inline-edit>
 (function () {
   if (window === window.top) return;
