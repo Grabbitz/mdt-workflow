@@ -56,6 +56,8 @@ const App = (() => {
     },
     view: 'workflows',
     filter: { search: '', channel: '' },
+    timelineSelectedId: null,
+    timelineChannel: '',
     connected: false,
   };
 
@@ -561,6 +563,12 @@ const App = (() => {
     );
     const totalSteps = list.reduce((sum, w) => sum + (w.steps || []).length, 0);
     const selectedChannel = state.filter.channel || 'ทุกช่องทาง';
+    const channelOptions = [...new Set(list.map((workflow) => workflow.channel || 'Other'))];
+    const selectedCanvasChannel = state.filter.channel || (channelOptions.includes(state.timelineChannel) ? state.timelineChannel : channelOptions[0]);
+    state.timelineChannel = selectedCanvasChannel || '';
+    const channelWorkflows = list.filter((workflow) => (workflow.channel || 'Other') === state.timelineChannel);
+    const activeWorkflow = channelWorkflows.find((w) => w.id === state.timelineSelectedId) || channelWorkflows[0] || null;
+    if (activeWorkflow) state.timelineSelectedId = activeWorkflow.id;
 
     summary.innerHTML = `
       <div class="timeline-summary-card">
@@ -587,77 +595,338 @@ const App = (() => {
       return;
     }
 
-    const grouped = list.reduce((acc, w) => {
-      const channel = w.channel || 'ไม่ระบุช่องทาง';
-      if (!acc[channel]) acc[channel] = [];
-      acc[channel].push(w);
-      return acc;
-    }, {});
-    const knownChannels = MT_CHANNELS.filter((channel) => grouped[channel]);
-    const extraChannels = Object.keys(grouped).filter((channel) => !MT_CHANNELS.includes(channel)).sort();
-    const channelOrder = [...knownChannels, ...extraChannels];
+    listEl.innerHTML = renderTimelineCanvas(list, channelWorkflows, activeWorkflow, channelOptions);
 
-    listEl.innerHTML = channelOrder.map((channel) => {
-      const workflows = grouped[channel];
-      const channelStepCount = workflows.reduce((sum, w) => sum + (w.steps || []).length, 0);
-      return `
-        <section class="timeline-channel-group">
-          <div class="timeline-channel-head">
-            <div>
-              <span class="timeline-channel-label">Channel</span>
-              <h2>${escapeHtml(channel)}</h2>
-            </div>
-            <div class="timeline-channel-stats">
-              <span>${workflows.length} workflow</span>
-              <span>${channelStepCount} steps</span>
-            </div>
-          </div>
-          <div class="timeline-channel-list">
-            ${workflows.map((w, wfIndex) => renderTimelineWorkflow(w, wfIndex)).join('')}
-          </div>
-        </section>
-      `;
-    }).join('');
-
+    $('#canvasChannelSelect')?.addEventListener('change', (e) => {
+      state.timelineChannel = e.target.value;
+      state.timelineSelectedId = null;
+      renderTimeline();
+    });
+    $$('[data-canvas-workflow]', listEl).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.timelineSelectedId = btn.dataset.canvasWorkflow;
+        renderTimeline();
+      });
+    });
+    $('#canvasLinkSource')?.addEventListener('change', syncCanvasLinkTargetOptions);
+    $('#btnAddCanvasLink')?.addEventListener('click', addCanvasLink);
+    $$('[data-remove-canvas-link]', listEl).forEach((btn) => {
+      btn.addEventListener('click', () => removeCanvasLink(btn.dataset.removeCanvasLink, btn.dataset.targetLink));
+    });
     $$('[data-open-workflow]', listEl).forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         openStepNavigator(btn.dataset.openWorkflow);
       });
     });
-    $$('.timeline-item', listEl).forEach((item) => {
-      item.addEventListener('click', () => openStepNavigator(item.dataset.id));
+    $$('[data-edit-workflow]', listEl).forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openWorkflowEditor(btn.dataset.editWorkflow);
+      });
     });
+    $$('[data-canvas-step]', listEl).forEach((node) => {
+      node.addEventListener('click', () => setCanvasStepDetail(activeWorkflow, Number(node.dataset.canvasStep)));
+    });
+    requestAnimationFrame(() => drawCanvasLinks());
   }
 
-  function renderTimelineWorkflow(w, wfIndex) {
-    const steps = w.steps || [];
+  function renderTimelineCanvas(list, channelWorkflows, activeWorkflow, channelOptions) {
+    const steps = activeWorkflow ? activeWorkflow.steps || [] : [];
+    const detailStep = steps[0] || null;
     return `
-      <article class="timeline-item" data-id="${w.id}">
-        <div class="timeline-marker">${String(wfIndex + 1).padStart(2, '0')}</div>
-        <div class="timeline-card">
-          <div class="timeline-card-head">
+      <div class="workflow-canvas-shell">
+        <aside class="canvas-workflow-panel">
+          <div class="canvas-panel-head">
+            <span>Channel</span>
+            <strong>${channelWorkflows.length}</strong>
+          </div>
+          <div class="canvas-channel-picker">
+            <select id="canvasChannelSelect" class="select-input" ${state.filter.channel ? 'disabled' : ''}>
+              ${channelOptions.map((channel) => `<option value="${escapeHtml(channel)}" ${channel === state.timelineChannel ? 'selected' : ''}>${escapeHtml(channel)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="canvas-workflow-list">
+            ${renderCanvasCategoryIndex(channelWorkflows, activeWorkflow)}
+          </div>
+        </aside>
+
+        <section class="canvas-stage">
+          <div class="canvas-stage-topbar">
             <div>
-              <h3>${escapeHtml(w.name || 'ไม่มีชื่อ')}</h3>
-              <div class="wf-card-meta">
-                ${w.category ? `<span class="badge">${escapeHtml(w.category)}</span>` : ''}
-              </div>
+              <span class="canvas-mode">Channel Worktree</span>
+              <h2>${escapeHtml(state.timelineChannel || 'ทุกช่องทาง')}</h2>
             </div>
-            <button class="btn btn-ghost btn-sm" data-open-workflow="${w.id}">เปิดดู</button>
+            <div class="canvas-actions">
+              ${activeWorkflow ? `<button class="btn btn-ghost btn-sm" data-open-workflow="${escapeHtml(activeWorkflow.id)}">เปิดดู</button>` : ''}
+              ${activeWorkflow ? `<button class="btn btn-primary btn-sm" data-edit-workflow="${escapeHtml(activeWorkflow.id)}">แก้ไข</button>` : ''}
+            </div>
           </div>
-          ${w.description ? `<p class="timeline-desc">${escapeHtml(w.description)}</p>` : ''}
-          <div class="timeline-steps">
-            ${steps.length ? steps.map((s, stepIndex) => `
-              <div class="timeline-step">
-                <span class="timeline-step-index">${stepIndex + 1}</span>
-                <div>
-                  <strong>${escapeHtml(s.title || 'ยังไม่มีชื่อหัวข้อ')}</strong>
-                </div>
+          <div class="canvas-linkbar">
+            <select id="canvasLinkSource" class="select-input">
+              ${channelWorkflows.map((workflow) => `<option value="${escapeHtml(workflow.id)}">${escapeHtml(workflow.name || 'ไม่มีชื่อ')}</option>`).join('')}
+            </select>
+            <select id="canvasLinkTarget" class="select-input"></select>
+            <button class="btn btn-ghost btn-sm" id="btnAddCanvasLink">โยง node</button>
+          </div>
+          <div class="canvas-board">
+            <svg class="canvas-link-layer" id="canvasLinkLayer" aria-hidden="true"></svg>
+            ${renderChannelCanvas(channelWorkflows, activeWorkflow)}
+          </div>
+        </section>
+
+        <aside class="canvas-detail-panel" id="canvasStepDetail">
+          ${activeWorkflow ? renderCanvasStepDetail(activeWorkflow, detailStep, 0) : '<div class="canvas-detail-empty"><strong>ยังไม่มี workflow</strong></div>'}
+        </aside>
+      </div>
+    `;
+  }
+
+  function renderCanvasCategoryIndex(list, activeWorkflow) {
+    const grouped = list.reduce((acc, workflow) => {
+      const category = workflow.category || 'ไม่ระบุหมวดหมู่';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(workflow);
+      return acc;
+    }, {});
+    return Object.keys(grouped).sort().map((category) => `
+      <section class="canvas-category-group">
+        <div class="canvas-category-head">${escapeHtml(category)}</div>
+        ${grouped[category].map((workflow) => `
+          <button class="canvas-workflow-item ${activeWorkflow && workflow.id === activeWorkflow.id ? 'active' : ''}" data-canvas-workflow="${escapeHtml(workflow.id)}">
+            <strong>${escapeHtml(workflow.name || 'ไม่มีชื่อ')}</strong>
+            <small>${(workflow.steps || []).length} steps</small>
+          </button>
+        `).join('')}
+      </section>
+    `).join('');
+  }
+
+  function renderChannelCanvas(channelWorkflows, activeWorkflow) {
+    if (!channelWorkflows.length) return '<div class="canvas-empty-node">ยังไม่มี workflow ใน channel นี้</div>';
+    const grouped = channelWorkflows.reduce((acc, workflow) => {
+      const category = workflow.category || 'ไม่ระบุหมวดหมู่';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(workflow);
+      return acc;
+    }, {});
+    const categoryNames = Object.keys(grouped).sort((a, b) => {
+      if (a === 'ไม่ระบุหมวดหมู่') return 1;
+      if (b === 'ไม่ระบุหมวดหมู่') return -1;
+      return a.localeCompare(b);
+    });
+
+    return `
+      <div class="canvas-worktree-grid">
+        ${categoryNames.map((category) => {
+          const workflows = grouped[category];
+          return `
+            <section class="canvas-tree-column">
+              <div class="canvas-tree-head">
+                <span>${escapeHtml(category)}</span>
+                <strong>${workflows.length}</strong>
               </div>
-            `).join('') : '<div class="timeline-step muted">ยังไม่มีหัวข้อย่อย</div>'}
-          </div>
+              <div class="canvas-tree-stack">
+                ${workflows.map((workflow, index) => renderWorkflowTreeNode(workflow, activeWorkflow, index)).join('')}
+              </div>
+            </section>
+          `;
+        }).join('')}
+      </div>
+      ${renderCanvasLinkList(channelWorkflows)}
+    `;
+  }
+
+  function renderWorkflowTreeNode(workflow, activeWorkflow, index) {
+    return `
+      <button class="canvas-workflow-node ${activeWorkflow && workflow.id === activeWorkflow.id ? 'active' : ''}" data-canvas-workflow="${escapeHtml(workflow.id)}" data-node-id="${escapeHtml(workflow.id)}" type="button">
+        <span class="canvas-step-icon">${index + 1}</span>
+        <span class="canvas-step-copy">
+          <strong>${escapeHtml(workflow.name || 'ไม่มีชื่อ')}</strong>
+          <small>${(workflow.steps || []).length} steps${workflow.description ? ` · ${escapeHtml(workflow.description.slice(0, 48))}` : ''}</small>
+        </span>
+        <span class="canvas-step-tools">${renderWorkflowResourceMarks(workflow)}</span>
+      </button>
+    `;
+  }
+
+  function renderWorkflowResourceMarks(workflow) {
+    const steps = workflow.steps || [];
+    const marks = [];
+    if (steps.some((step) => (step.links || []).length)) marks.push('Link');
+    if (steps.some((step) => (step.attachments || []).length)) marks.push('File');
+    if (steps.some((step) => (step.checklist || []).length)) marks.push('Check');
+    return marks.map((mark) => `<em>${mark}</em>`).join('');
+  }
+
+  function canvasLinksFor(workflows) {
+    return workflows.flatMap((workflow) =>
+      (workflow.canvasNextIds || []).filter((targetId) => workflows.some((item) => item.id === targetId))
+        .map((targetId) => ({ source: workflow.id, target: targetId }))
+    );
+  }
+
+  function renderCanvasLinkList(workflows) {
+    const links = canvasLinksFor(workflows);
+    if (!links.length) return '';
+    const byId = Object.fromEntries(workflows.map((workflow) => [workflow.id, workflow]));
+    return `
+      <div class="canvas-link-list">
+        ${links.map((link) => `
+          <span>
+            ${escapeHtml(byId[link.source]?.name || 'Source')} → ${escapeHtml(byId[link.target]?.name || 'Target')}
+            <button type="button" data-remove-canvas-link="${escapeHtml(link.source)}" data-target-link="${escapeHtml(link.target)}">×</button>
+          </span>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function syncCanvasLinkTargetOptions() {
+    const source = $('#canvasLinkSource')?.value;
+    const target = $('#canvasLinkTarget');
+    if (!target) return;
+    const workflows = getFilteredWorkflows().filter((workflow) => (workflow.channel || 'Other') === state.timelineChannel);
+    target.innerHTML = workflows
+      .filter((workflow) => workflow.id !== source)
+      .map((workflow) => `<option value="${escapeHtml(workflow.id)}">${escapeHtml(workflow.name || 'ไม่มีชื่อ')}</option>`)
+      .join('');
+  }
+
+  function addCanvasLink() {
+    const sourceId = $('#canvasLinkSource')?.value;
+    const targetId = $('#canvasLinkTarget')?.value;
+    if (!sourceId || !targetId || sourceId === targetId) return;
+    const source = state.workflows.find((workflow) => workflow.id === sourceId);
+    if (!source) return;
+    source.canvasNextIds = source.canvasNextIds || [];
+    if (!source.canvasNextIds.includes(targetId)) source.canvasNextIds.push(targetId);
+    persist();
+    renderTimeline();
+  }
+
+  function removeCanvasLink(sourceId, targetId) {
+    const source = state.workflows.find((workflow) => workflow.id === sourceId);
+    if (!source) return;
+    source.canvasNextIds = (source.canvasNextIds || []).filter((id) => id !== targetId);
+    persist();
+    renderTimeline();
+  }
+
+  function drawCanvasLinks() {
+    const board = $('.canvas-board');
+    const svg = $('#canvasLinkLayer');
+    if (!board || !svg) return;
+    const workflows = getFilteredWorkflows().filter((workflow) => (workflow.channel || 'Other') === state.timelineChannel);
+    const links = canvasLinksFor(workflows);
+    const boardRect = board.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${board.scrollWidth} ${board.scrollHeight}`);
+    svg.style.width = `${board.scrollWidth}px`;
+    svg.style.height = `${board.scrollHeight}px`;
+    svg.innerHTML = links.map((link) => {
+      const source = $(`[data-node-id="${CSS.escape(link.source)}"]`);
+      const target = $(`[data-node-id="${CSS.escape(link.target)}"]`);
+      if (!source || !target) return '';
+      const a = source.getBoundingClientRect();
+      const b = target.getBoundingClientRect();
+      const x1 = a.right - boardRect.left + board.scrollLeft;
+      const y1 = a.top + a.height / 2 - boardRect.top + board.scrollTop;
+      const x2 = b.left - boardRect.left + board.scrollLeft;
+      const y2 = b.top + b.height / 2 - boardRect.top + board.scrollTop;
+      const mid = Math.max(48, Math.abs(x2 - x1) / 2);
+      return `
+        <path class="canvas-link-path" d="M ${x1} ${y1} C ${x1 + mid} ${y1}, ${x2 - mid} ${y2}, ${x2} ${y2}" />
+      `;
+    }).join('');
+    syncCanvasLinkTargetOptions();
+  }
+
+  function renderCanvasFlow(workflow) {
+    const steps = workflow.steps || [];
+    if (!steps.length) return '<div class="canvas-empty-node">ยังไม่มีหัวข้อย่อย</div>';
+    return `
+      <div class="canvas-flow">
+        <div class="canvas-start-node">
+          <span>Start</span>
+          <strong>${escapeHtml(workflow.channel || 'Workflow')}</strong>
         </div>
-      </article>
+        ${steps.map((step, index) => `
+          <div class="canvas-connector"><span></span></div>
+          <button class="canvas-step-node ${index === 0 ? 'active' : ''}" data-canvas-step="${index}" type="button">
+            <span class="canvas-step-icon">${index + 1}</span>
+            <span class="canvas-step-copy">
+              <strong>${escapeHtml(step.title || 'ยังไม่มีชื่อหัวข้อ')}</strong>
+              <small>${escapeHtml((step.description || 'ไม่มีรายละเอียด').slice(0, 74))}</small>
+            </span>
+            <span class="canvas-step-tools">${renderStepResourceMarks(step)}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderStepResourceMarks(step) {
+    const marks = [];
+    if ((step.checklist || []).length) marks.push('Check');
+    if ((step.links || []).length) marks.push('Link');
+    if ((step.attachments || []).length) marks.push('File');
+    return marks.map((mark) => `<em>${mark}</em>`).join('');
+  }
+
+  function setCanvasStepDetail(workflow, index) {
+    const detail = $('#canvasStepDetail');
+    if (!detail) return;
+    $$('.canvas-step-node').forEach((node) => node.classList.toggle('active', Number(node.dataset.canvasStep) === index));
+    detail.innerHTML = renderCanvasStepDetail(workflow, (workflow.steps || [])[index], index);
+  }
+
+  function renderCanvasStepDetail(workflow, step, index) {
+    if (!step) {
+      return `
+        <div class="canvas-detail-empty">
+          <span>${escapeHtml(workflow.name || 'Workflow')}</span>
+          <strong>ยังไม่มีหัวข้อย่อย</strong>
+        </div>
+      `;
+    }
+    const links = step.links || [];
+    const attachments = step.attachments || [];
+    const checklist = step.checklist || [];
+    return `
+      <div class="canvas-detail-head">
+        <span>Step ${index + 1}</span>
+        <h3>${escapeHtml(step.title || 'ยังไม่มีชื่อหัวข้อ')}</h3>
+      </div>
+      ${step.description ? `<p class="canvas-detail-desc">${escapeHtml(step.description)}</p>` : ''}
+      ${checklist.length ? `
+        <div class="canvas-detail-section">
+          <span>Checklist</span>
+          ${checklist.map((item) => `<p>${item.done ? '✓' : '○'} ${escapeHtml(item.text)}</p>`).join('')}
+        </div>` : ''}
+      ${(step.tools || step.documents) ? `
+        <div class="canvas-detail-section">
+          <span>Resources</span>
+          ${step.tools ? `<p><strong>Tools</strong> ${escapeHtml(step.tools)}</p>` : ''}
+          ${step.documents ? `<p><strong>เอกสาร</strong> ${escapeHtml(step.documents)}</p>` : ''}
+        </div>` : ''}
+      ${links.length ? `
+        <div class="canvas-detail-section">
+          <span>Links</span>
+          <div class="canvas-detail-links">
+            ${links.map((link, li) => {
+              const href = normalizeStepLink(link);
+              return href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(stepLinkLabel(link, li))}</a>` : '';
+            }).join('')}
+          </div>
+        </div>` : ''}
+      ${attachments.length ? `
+        <div class="canvas-detail-section">
+          <span>Files</span>
+          <div class="canvas-detail-links">
+            ${attachments.map((file) => `<a href="${file.data}" download="${escapeHtml(file.name)}">${escapeHtml(file.name)}</a>`).join('')}
+          </div>
+        </div>` : ''}
+      ${step.notes ? `<div class="canvas-detail-note">${escapeHtml(step.notes)}</div>` : ''}
     `;
   }
 
@@ -1633,6 +1902,13 @@ function _json(obj) {
     // Nav
     $$('.nav-item').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
     $('#menuToggle')?.addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+    $('#btnToggleSidebar')?.addEventListener('click', () => {
+      const collapsed = document.body.classList.toggle('sidebar-collapsed');
+      const btn = $('#btnToggleSidebar');
+      btn?.setAttribute('aria-pressed', String(collapsed));
+      btn?.setAttribute('aria-label', collapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูด้านซ้าย');
+      requestAnimationFrame(() => drawCanvasLinks());
+    });
 
     // Workflow actions
     $('#btnNewWorkflow').addEventListener('click', () => openWorkflowEditor());
