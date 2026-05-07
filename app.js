@@ -144,27 +144,33 @@ const App = (() => {
     }
   }
 
+  function _decodeJwt(token) {
+    try {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    } catch { return null; }
+  }
+
   async function handleSignInResponse(response) {
     const idToken = response.credential;
+    const claims = _decodeJwt(idToken);
+    if (!claims?.email) { toast('Sign in ไม่สำเร็จ: อ่าน token ไม่ได้', 'error'); return; }
     if (!state.settings.sheetUrl) {
       toast('กรุณาตั้งค่า Apps Script URL ก่อน', 'error');
       return;
     }
     try {
-      const res = await fetch(state.settings.sheetUrl, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'checkRole', token: idToken }),
-      });
+      const res = await fetch(state.settings.sheetUrl + '?action=checkRole&email=' + encodeURIComponent(claims.email));
       const data = await res.json();
       if (!data.ok) { toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return; }
       if (data.role !== 'admin') { toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return; }
       state.session.role = 'admin';
       state.session.token = idToken;
-      state.session.email = data.email;
-      state.session.name = data.name || data.email;
+      state.session.email = claims.email;
+      state.session.name = claims.name || claims.email;
       updateAuthUI();
       renderAll();
-      toast('✓ ' + (data.name || data.email) + ' — เข้าสู่ระบบแล้ว', 'success');
+      toast('✓ ' + (claims.name || claims.email) + ' — เข้าสู่ระบบแล้ว', 'success');
     } catch (err) {
       toast('Sign in ไม่สำเร็จ: ' + err.message, 'error');
     }
@@ -1289,9 +1295,9 @@ function doGet(e) {
     if (params.action === 'ping') return _json({ ok: true, msg: 'pong' });
 
     if (params.action === 'checkRole') {
-      const user = _validateGoogleToken(params.token);
-      if (!user) return _json({ ok: false, error: 'Invalid token' });
-      return _json({ ok: true, email: user.email, name: user.name, role: _isAdmin(user.email) ? 'admin' : 'viewer' });
+      const email = (params.email || '').trim().toLowerCase();
+      if (!email) return _json({ ok: false, error: 'No email' });
+      return _json({ ok: true, email, role: _isAdmin(email) ? 'admin' : 'viewer' });
     }
 
     if (params.action === 'listAdmins') {
