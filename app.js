@@ -136,12 +136,9 @@ const App = (() => {
         logo_alignment: 'left',
         width: 180,
       });
-      // Show fallback button if renderButton produced nothing after a tick
-      setTimeout(() => {
-        const fallback = $('#btnSignIn');
-        if (fallback) fallback.style.display = container.children.length ? 'none' : '';
-      }, 800);
     }
+    const fallback = $('#btnSignIn');
+    if (fallback && !isAdmin()) fallback.style.display = '';
   }
 
   function _decodeJwt(token) {
@@ -204,10 +201,8 @@ const App = (() => {
 
   function updateAuthUI() {
     const adm = isAdmin();
-    const gsiBtn = $('#gsiBtn');
     const fallback = $('#btnSignIn');
-    if (gsiBtn) gsiBtn.style.display = adm ? 'none' : '';
-    if (fallback) fallback.style.display = adm ? 'none' : (gsiBtn?.children.length ? 'none' : '');
+    if (fallback) fallback.style.display = adm ? 'none' : '';
     $('#userChip').hidden = !adm;
     const navSettings = $('#navSettings');
     if (navSettings) navSettings.hidden = !adm;
