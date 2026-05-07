@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="คลังความรู้ Modern Trade — รวบรวมข้อมูล วิธีการทำงาน สามารถเพิ่มและแก้ไขข้อมูลได้ตลอด" />
   <title>MDT Workflow · คลังความรู้ Modern Trade</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="window._gsiReady&&window._gsiReady()"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -58,10 +58,7 @@
         </div>
       </div>
       <div class="sidebar-footer-controls">
-        <button class="btn btn-ghost btn-sm" id="btnSignIn" style="flex:1;justify-content:center">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-          เข้าสู่ระบบ Admin
-        </button>
+        <div id="gsiBtn" style="flex:1;display:flex;align-items:center;min-height:36px"></div>
         <div class="user-chip" id="userChip" hidden>
           <div class="user-avatar" id="userAvatar">A</div>
           <div class="user-info">

@@ -113,13 +113,30 @@ const App = (() => {
 
   // ---------- Auth (Google Sign-In) ----------
   function initGoogleSignIn(clientId) {
-    if (!clientId || !window.google?.accounts?.id) return;
+    if (!clientId) return;
+    if (!window.google?.accounts?.id) {
+      window._gsiReady = () => initGoogleSignIn(clientId);
+      return;
+    }
     google.accounts.id.initialize({
       client_id: clientId,
       callback: handleSignInResponse,
       auto_select: false,
       cancel_on_tap_outside: true,
     });
+    const container = $('#gsiBtn');
+    if (container) {
+      container.innerHTML = '';
+      google.accounts.id.renderButton(container, {
+        theme: 'filled_black',
+        size: 'medium',
+        type: 'standard',
+        text: 'signin_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: container.offsetWidth || 200,
+      });
+    }
   }
 
   async function handleSignInResponse(response) {
@@ -174,10 +191,9 @@ const App = (() => {
 
   function updateAuthUI() {
     const adm = isAdmin();
-    $('#btnSignIn').hidden = adm;
+    const gsiBtn = $('#gsiBtn');
+    if (gsiBtn) gsiBtn.style.display = adm ? 'none' : '';
     $('#userChip').hidden = !adm;
-    const navSettings = $('#navSettings');
-    if (navSettings) navSettings.hidden = !adm;
     if (adm) {
       $('#userAvatar').textContent = (state.session.name || 'A')[0].toUpperCase();
       $('#userName').textContent = state.session.name || state.session.email || 'Admin';
@@ -1472,7 +1488,6 @@ function _json(obj) {
         closeStepModal(false);
       }
     });
-    $('#btnSignIn').addEventListener('click', triggerSignIn);
     $('#btnSignOut').addEventListener('click', signOut);
     $('#btnSaveClientId').addEventListener('click', saveGoogleClientId);
     $('#btnAddAdmin').addEventListener('click', addAdminUser);
