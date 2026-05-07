@@ -1357,16 +1357,13 @@ function doPost(e) {
 function _validateGoogleToken(idToken) {
   if (!idToken) return null;
   try {
-    const res = UrlFetchApp.fetch(
-      'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
-      { muteHttpExceptions: true }
-    );
-    if (res.getResponseCode() !== 200) return null;
-    const data = JSON.parse(res.getContentText());
-    if (data.error) return null;
-    if (parseInt(data.exp) * 1000 < Date.now()) return null;
-    if (GOOGLE_CLIENT_ID && data.aud !== GOOGLE_CLIENT_ID) return null;
-    return { email: data.email, name: data.name || data.email };
+    const parts = idToken.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[1])).getDataAsString());
+    if (payload.exp * 1000 < Date.now()) return null;
+    if (!['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss)) return null;
+    if (GOOGLE_CLIENT_ID && payload.aud !== GOOGLE_CLIENT_ID) return null;
+    return { email: payload.email, name: payload.name || payload.email };
   } catch (err) { return null; }
 }
 
