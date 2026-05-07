@@ -2055,3 +2055,83 @@ html[data-theme="light"] [data-theme-toggle] .icon-moon { display: none; }
   color: var(--text-faint);
   margin-top: var(--space-2);
 }
+
+/* ============================================
+   FILE ATTACHMENTS (step modal + chain view)
+   ============================================ */
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.attachment-empty {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  padding: var(--space-2) 0;
+}
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.attachment-item svg { flex-shrink: 0; color: var(--text-faint); }
+.attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+}
+.attachment-name:hover { color: var(--orange); text-decoration: underline; }
+.attachment-size { flex-shrink: 0; color: var(--text-faint); }
+.attachment-item .icon-btn { width: 22px; height: 22px; flex-shrink: 0; }
+
+.attachment-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.attachment-label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.attachment-hint {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+/* Attachment links in chain (step navigator) */
+.chain-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+.chain-attachment-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 2px var(--space-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  display: inline-block;
+}
+.chain-attachment-link:hover { color: var(--orange); border-color: var(--orange); }

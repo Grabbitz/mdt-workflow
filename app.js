@@ -410,7 +410,6 @@ const App = (() => {
     renderChannelContext();
     renderWorkflowGrid();
     renderTimeline();
-    renderDashboard();
   }
 
   function renderCategoryControls() {
@@ -692,119 +691,12 @@ const App = (() => {
     `;
   }
 
-  function renderDashboard() {
-    const stats = $('#statsGrid');
-    const summary = $('#dashboardSummary');
-    const total = state.workflows.length;
-    const active = state.workflows.filter((w) => w.status === 'active').length;
-    const draft = state.workflows.filter((w) => w.status === 'draft').length;
-    const paused = state.workflows.filter((w) => w.status === 'paused').length;
-    const channelsWithData = new Set(state.workflows.map((w) => w.channel).filter(Boolean)).size;
-    const totalSteps = state.workflows.reduce((sum, w) => sum + (w.steps || []).length, 0);
-
-    if (summary) {
-      summary.innerHTML = `
-        <div>
-          <span class="dashboard-summary-label">Modern Trade Operation</span>
-          <h2>${total ? `${total} เรื่องในคลังความรู้` : 'ยังไม่มีข้อมูล workflow'}</h2>
-          <p>${channelsWithData} ช่องทางมีข้อมูล · ${active} ใช้งาน · ${draft} ร่าง · ${paused} พัก</p>
-        </div>
-        <button class="btn btn-ghost btn-sm" data-dashboard-timeline>ดูเป็น Timeline</button>
-      `;
-      $('[data-dashboard-timeline]', summary)?.addEventListener('click', () => switchView('timeline'));
-    }
-
-    stats.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-label">จำนวนเรื่องทั้งหมด</div>
-        <div class="stat-value">${total}</div>
-        <div class="stat-sub">${active} active</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">หัวข้อย่อยทั้งหมด</div>
-        <div class="stat-value">${totalSteps}</div>
-        <div class="stat-sub">ใน ${total} เรื่อง</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Sync Status</div>
-        <div class="stat-value" style="font-size:1.25rem;margin-top:12px">${state.connected ? '✅ Online' : '💾 Local'}</div>
-        <div class="stat-sub">${state.connected ? 'Google Sheets' : 'ยังไม่เชื่อม'}</div>
-      </div>
-    `;
-
-    // Category breakdown
-    const bdEl = $('#categoryBreakdown');
-    const counts = {};
-    state.workflows.forEach((w) => {
-      const k = w.channel || 'Other';
-      counts[k] = (counts[k] || 0) + 1;
-    });
-    const max = Math.max(1, ...Object.values(counts));
-    const cats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    bdEl.innerHTML = cats.length
-      ? cats
-          .map(
-            ([c, n]) => `
-        <div class="breakdown-row">
-          <span class="breakdown-label">${escapeHtml(c)}</span>
-          <div class="breakdown-bar"><div class="breakdown-fill" style="width:${(n / max) * 100}%"></div></div>
-          <span class="breakdown-count">${n}</span>
-        </div>`
-          )
-          .join('')
-      : '<p style="color:var(--text-muted);font-size:var(--text-sm)">ยังไม่มีข้อมูล</p>';
-
-    const workCategoryEl = $('#workCategoryBreakdown');
-    if (workCategoryEl) {
-      const catCounts = {};
-      state.workflows.forEach((w) => {
-        const k = w.category || 'ยังไม่ระบุ';
-        catCounts[k] = (catCounts[k] || 0) + 1;
-      });
-      const catMax = Math.max(1, ...Object.values(catCounts));
-      const workCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
-      workCategoryEl.innerHTML = workCats.length
-        ? workCats
-            .map(
-              ([c, n]) => `
-          <div class="breakdown-row">
-            <span class="breakdown-label">${escapeHtml(c)}</span>
-            <div class="breakdown-bar"><div class="breakdown-fill muted-fill" style="width:${(n / catMax) * 100}%"></div></div>
-            <span class="breakdown-count">${n}</span>
-          </div>`
-            )
-            .join('')
-        : '<p style="color:var(--text-muted);font-size:var(--text-sm)">ยังไม่มีข้อมูล</p>';
-    }
-
-    // Recent activity
-    const raEl = $('#recentActivity');
-    const recent = [...state.workflows]
-      .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
-      .slice(0, 6);
-    raEl.innerHTML = recent.length
-      ? recent
-          .map(
-            (w) => `
-        <div class="activity-item">
-          <div class="activity-dot"></div>
-          <div class="activity-body">
-            <div style="font-weight:600">${escapeHtml(w.name)}</div>
-            <div class="activity-time">${formatDate(w.updatedAt || w.createdAt)} · ${w.steps?.length || 0} หัวข้อย่อย</div>
-          </div>
-        </div>`
-          )
-          .join('')
-      : '<p style="color:var(--text-muted);font-size:var(--text-sm)">ยังไม่มีกิจกรรม</p>';
-  }
-
   // ---------- View switching ----------
   function switchView(name) {
     state.view = name;
     $$('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
     $$('.view').forEach((v) => v.classList.toggle('active', v.dataset.viewContent === name));
     $('#sidebar').classList.remove('open');
-    if (name === 'dashboard') renderDashboard();
     if (name === 'timeline') renderTimeline();
     if (name === 'settings' && isAdmin()) loadAdminList();
   }
@@ -975,6 +867,13 @@ const App = (() => {
 
       const notesHtml = s.notes ? `<div class="chain-notes">${escapeHtml(s.notes)}</div>` : '';
 
+      const attachments = s.attachments || [];
+      const attachHtml = attachments.length ? `
+        <div class="chain-attachments">
+          <span class="chain-info-label">ไฟล์แนบ</span>
+          ${attachments.map((f) => `<a class="chain-attachment-link" href="${f.data}" download="${escapeHtml(f.name)}">${escapeHtml(f.name)}</a>`).join('')}
+        </div>` : '';
+
       return `
         <div class="chain-step">
           <div class="chain-node">
@@ -983,7 +882,7 @@ const App = (() => {
           </div>
           <div class="chain-content">
             <h3 class="chain-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</h3>
-            ${ownerHtml}${descHtml}${checklistHtml}${infoHtml}${notesHtml}
+            ${ownerHtml}${descHtml}${checklistHtml}${infoHtml}${notesHtml}${attachHtml}
           </div>
         </div>`;
     }).join('')}</div>`;
@@ -1095,6 +994,7 @@ const App = (() => {
       documents: '',
       links: [],
       notes: '',
+      attachments: [],
     };
     state.currentWorkflow.steps.push(s);
     openStepModal(state.currentWorkflow.steps.length - 1, true);
@@ -1121,6 +1021,7 @@ const App = (() => {
     $('#stepLinks').value = (s.links || []).join(', ');
     $('#stepNotes').value = s.notes || '';
     renderChecklist();
+    renderAttachments();
     $('#stepModal').hidden = false;
     $('#stepModalOverlay').hidden = false;
     setTimeout(() => $('#stepTitle').focus(), 120);
@@ -1193,6 +1094,35 @@ const App = (() => {
     s.checklist.push({ text: txt, done: false });
     input.value = '';
     renderChecklist();
+  }
+
+  // ---------- Attachments ----------
+  function renderAttachments() {
+    if (state.currentStepIndex == null) return;
+    const s = state.currentWorkflow.steps[state.currentStepIndex];
+    const el = $('#stepAttachments');
+    if (!el) return;
+    const items = s.attachments || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="attachment-empty">ยังไม่มีไฟล์แนบ</div>';
+      return;
+    }
+    el.innerHTML = items.map((f, i) => `
+      <div class="attachment-item">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        <a class="attachment-name" href="${f.data}" download="${escapeHtml(f.name)}">${escapeHtml(f.name)}</a>
+        <span class="attachment-size">${(f.size / 1024).toFixed(0)} KB</span>
+        <button class="icon-btn" data-remove-attachment="${i}" aria-label="ลบ">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>`).join('');
+    $$('[data-remove-attachment]', el).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.removeAttachment);
+        s.attachments.splice(idx, 1);
+        renderAttachments();
+      });
+    });
   }
 
   // ---------- Settings actions ----------
@@ -1542,6 +1472,28 @@ function _json(obj) {
     $('#btnAddChecklist').addEventListener('click', addChecklistItem);
     $('#checklistInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); addChecklistItem(); }
+    });
+
+    $('#stepFileInput').addEventListener('change', (e) => {
+      if (state.currentStepIndex == null) return;
+      const s = state.currentWorkflow.steps[state.currentStepIndex];
+      s.attachments = s.attachments || [];
+      const MAX = 2 * 1024 * 1024;
+      let oversized = 0;
+      const readers = Array.from(e.target.files).map((file) => new Promise((resolve) => {
+        if (file.size > MAX) { oversized++; resolve(); return; }
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          s.attachments.push({ id: stepUid(), name: file.name, type: file.type, size: file.size, data: evt.target.result });
+          resolve();
+        };
+        reader.readAsDataURL(file);
+      }));
+      Promise.all(readers).then(() => {
+        e.target.value = '';
+        if (oversized) toast(`⚠️ ${oversized} ไฟล์ใหญ่เกิน 2 MB (ข้ามไป)`, 'error');
+        renderAttachments();
+      });
     });
 
     // Filters
