@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="คลังความรู้ Modern Trade — รวบรวมข้อมูล วิธีการทำงาน สามารถเพิ่มและแก้ไขข้อมูลได้ตลอด" />
   <title>MDT Workflow · คลังความรู้ Modern Trade</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -57,7 +58,20 @@
         </div>
       </div>
       <div class="sidebar-footer-controls">
-        <button class="btn btn-ghost btn-sm admin-access-btn" id="btnAdminAccess">Unlock Admin</button>
+        <button class="btn btn-ghost btn-sm" id="btnSignIn" style="flex:1;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          เข้าสู่ระบบ Admin
+        </button>
+        <div class="user-chip" id="userChip" hidden>
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-info">
+            <span class="user-name" id="userName">-</span>
+            <span class="user-role-badge">Admin</span>
+          </div>
+          <button class="icon-btn" id="btnSignOut" title="ออกจากระบบ" style="width:28px;height:28px;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
         <button class="theme-toggle" data-theme-toggle aria-label="สลับโหมดสี">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -200,6 +214,40 @@
       </header>
 
       <div class="settings-grid">
+        <!-- Google Auth + Admin Management -->
+        <div class="panel panel-accent">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <div class="panel-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <h3>Admin Access (Google Sign-In)</h3>
+                <p class="panel-sub">ตั้งค่า OAuth เพื่อแยกสิทธิ์ผู้อ่าน / ผู้แก้ไข</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label for="googleClientId">Google Client ID</label>
+              <input type="text" id="googleClientId" placeholder="XXXXX.apps.googleusercontent.com" />
+              <span class="form-hint">สร้างจาก Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client IDs</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btnSaveClientId">บันทึก Client ID</button>
+
+            <div id="adminMgmtSection" hidden style="margin-top:var(--space-6);padding-top:var(--space-5);border-top:1px solid var(--divider)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4)">
+                <h4 style="font-size:var(--text-sm);font-weight:600">Admin Users</h4>
+                <span style="font-size:var(--text-xs);color:var(--text-faint)">Admin แรกต้องเพิ่มตรงใน Google Sheet (แท็บ AdminUsers)</span>
+              </div>
+              <div id="adminList"></div>
+              <div style="display:flex;gap:var(--space-2);margin-top:var(--space-4)">
+                <input type="email" id="addAdminEmail" placeholder="email@domain.com" style="flex:1" />
+                <button class="btn btn-ghost btn-sm" id="btnAddAdmin">+ เพิ่ม Admin</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="panel panel-accent">
           <div class="panel-header">
             <div class="panel-title-wrap">
@@ -439,32 +487,6 @@
     </footer>
   </div>
 
-  <div class="modal-overlay" id="adminModalOverlay" hidden></div>
-  <div class="modal modal-sm" id="adminModal" hidden role="dialog" aria-label="Admin Access">
-    <header class="modal-header">
-      <div>
-        <span class="modal-eyebrow">Role Gate</span>
-        <h2>ปลดล็อกสิทธิ์ Admin</h2>
-      </div>
-      <button class="icon-btn" id="btnCloseAdminModal" aria-label="ปิด">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </header>
-    <div class="modal-body">
-      <p class="admin-modal-copy">ใส่รหัส admin เพื่อเปิดเมนู Settings และจัดการการเชื่อมต่อระบบ</p>
-      <div class="form-group">
-        <label for="adminAccessCode">Admin Access Code</label>
-        <input type="password" id="adminAccessCode" placeholder="กรอกรหัส admin" />
-        <span class="form-hint">สิทธิ์นี้จะอยู่แค่ใน session ปัจจุบันของหน้าเว็บ</span>
-      </div>
-      <div class="connection-status" id="adminAccessStatus"></div>
-    </div>
-    <footer class="modal-footer">
-      <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btnCancelAdminAccess">ยกเลิก</button>
-      <button class="btn btn-primary" id="btnConfirmAdminAccess">ปลดล็อก</button>
-    </footer>
-  </div>
 
   <!-- ===================== STEP NAVIGATOR ===================== -->
   <div class="step-nav" id="stepNav" hidden aria-label="รายละเอียด Workflow">

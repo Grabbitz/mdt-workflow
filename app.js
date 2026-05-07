@@ -7,7 +7,6 @@ const App = (() => {
   // ฝัง Web App URL ไว้ให้แอปเชื่อม Google Sheet ได้ทันที
   const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz1ykqlBPVH2yPXSnUoQZutkuKaIbrgt2jX5JNlauxG-2aGHNDr92AbmAaQZ_JnaQO6GA/exec';
   const DEFAULT_SECRET = '';
-  const ADMIN_ACCESS_CODE = 'mt-admin';
   const MT_CHANNELS = [
     'B2S',
     'Betrend',
@@ -47,9 +46,13 @@ const App = (() => {
     settings: {
       sheetUrl: DEFAULT_SHEET_URL,
       secret: DEFAULT_SECRET,
+      googleClientId: '',
     },
     session: {
       role: 'viewer',
+      token: null,
+      email: null,
+      name: null,
     },
     view: 'workflows',
     filter: { search: '', channel: '', status: '' },
@@ -108,63 +111,160 @@ const App = (() => {
     }, 2800);
   };
 
-  function updateAdminUI() {
-    const navSettings = $('#navSettings');
-    const btnAdminAccess = $('#btnAdminAccess');
-    if (navSettings) navSettings.hidden = !isAdmin();
-    if (btnAdminAccess) {
-      btnAdminAccess.textContent = isAdmin() ? 'Admin On' : 'Unlock Admin';
-      btnAdminAccess.classList.toggle('btn-primary', isAdmin());
-      btnAdminAccess.classList.toggle('btn-ghost', !isAdmin());
+  // ---------- Auth (Google Sign-In) ----------
+  function initGoogleSignIn(clientId) {
+    if (!clientId || !window.google?.accounts?.id) return;
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleSignInResponse,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+  }
+
+  async function handleSignInResponse(response) {
+    const idToken = response.credential;
+    if (!state.settings.sheetUrl) {
+      toast('กรุณาตั้งค่า Apps Script URL ก่อน', 'error');
+      return;
+    }
+    try {
+      const url = state.settings.sheetUrl + '?action=checkRole&token=' + encodeURIComponent(idToken);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.ok) { toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return; }
+      if (data.role !== 'admin') { toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return; }
+      state.session.role = 'admin';
+      state.session.token = idToken;
+      state.session.email = data.email;
+      state.session.name = data.name || data.email;
+      updateAuthUI();
+      renderAll();
+      toast('✓ ' + (data.name || data.email) + ' — เข้าสู่ระบบแล้ว', 'success');
+    } catch (err) {
+      toast('Sign in ไม่สำเร็จ: ' + err.message, 'error');
     }
   }
 
-  function openAdminModal() {
-    $('#adminAccessCode').value = '';
-    const status = $('#adminAccessStatus');
-    status.className = 'connection-status';
-    status.textContent = '';
-    $('#adminModal').hidden = false;
-    $('#adminModalOverlay').hidden = false;
-    setTimeout(() => $('#adminAccessCode').focus(), 120);
+  function triggerSignIn() {
+    if (!state.settings.googleClientId) {
+      toast('กรุณาตั้งค่า Google Client ID ใน Settings ก่อน', 'error');
+      if (state.settings.sheetUrl) switchView('settings');
+      return;
+    }
+    if (!window.google?.accounts?.id) {
+      toast('Google Sign-In ยังโหลดไม่เสร็จ ลองอีกครั้ง', 'error');
+      return;
+    }
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        google.accounts.id.renderButton(document.createElement('div'), {});
+      }
+    });
   }
 
-  function closeAdminModal() {
-    $('#adminModal').hidden = true;
-    $('#adminModalOverlay').hidden = true;
+  function signOut() {
+    state.session = { role: 'viewer', token: null, email: null, name: null };
+    if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
+    if (state.view === 'settings') switchView('workflows');
+    updateAuthUI();
+    renderAll();
+    toast('ออกจากระบบแล้ว', '');
+  }
+
+  function updateAuthUI() {
+    const adm = isAdmin();
+    $('#btnSignIn').hidden = adm;
+    $('#userChip').hidden = !adm;
+    const navSettings = $('#navSettings');
+    if (navSettings) navSettings.hidden = !adm;
+    if (adm) {
+      $('#userAvatar').textContent = (state.session.name || 'A')[0].toUpperCase();
+      $('#userName').textContent = state.session.name || state.session.email || 'Admin';
+    }
   }
 
   function ensureAdmin(message = 'เมนูนี้สำหรับ admin เท่านั้น') {
     if (isAdmin()) return true;
-    toast(message, 'error');
-    openAdminModal();
+    toast(message + ' — กรุณา Sign in', 'error');
     return false;
   }
 
-  function unlockAdminAccess() {
-    const input = $('#adminAccessCode');
-    const status = $('#adminAccessStatus');
-    const code = input.value.trim();
+  // ---------- Admin management ----------
+  async function loadAdminList() {
+    if (!state.settings.sheetUrl || !state.session.token) return;
+    try {
+      const url = state.settings.sheetUrl + '?action=listAdmins&token=' + encodeURIComponent(state.session.token);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.ok) return;
+      renderAdminList(data.admins || []);
+      $('#adminMgmtSection').hidden = false;
+    } catch (err) { console.error(err); }
+  }
 
-    if (!code) {
-      status.className = 'connection-status show error';
-      status.textContent = 'กรุณากรอกรหัส admin';
-      input.focus();
+  function renderAdminList(admins) {
+    const el = $('#adminList');
+    if (!el) return;
+    if (!admins.length) {
+      el.innerHTML = '<p style="color:var(--text-faint);font-size:var(--text-sm)">ยังไม่มี Admin (เพิ่มได้จากด้านล่าง)</p>';
       return;
     }
+    el.innerHTML = admins.map((a) => `
+      <div class="admin-row">
+        <div class="admin-row-info">
+          <div style="font-weight:600">${escapeHtml(a.name || a.email)}</div>
+          <div class="admin-row-email">${escapeHtml(a.email)}</div>
+        </div>
+        ${a.email !== state.session.email
+          ? `<button class="btn btn-danger-ghost btn-sm" data-remove-admin="${escapeHtml(a.email)}">ลบ</button>`
+          : '<span style="font-size:var(--text-xs);color:var(--text-faint)">(คุณ)</span>'}
+      </div>`).join('');
+    $$('[data-remove-admin]', el).forEach((btn) => {
+      btn.addEventListener('click', () => removeAdminUser(btn.dataset.removeAdmin));
+    });
+  }
 
-    if (code !== ADMIN_ACCESS_CODE) {
-      status.className = 'connection-status show error';
-      status.textContent = 'รหัสไม่ถูกต้อง';
-      toast('❌ รหัส admin ไม่ถูกต้อง', 'error');
-      input.select();
-      return;
-    }
+  async function addAdminUser() {
+    const input = $('#addAdminEmail');
+    const email = input?.value.trim().toLowerCase();
+    if (!email || !state.session.token) return;
+    try {
+      const res = await fetch(state.settings.sheetUrl, {
+        method: 'POST', mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'addAdmin', token: state.session.token, email }),
+      });
+      const data = await res.json();
+      if (!data.ok) { toast('เพิ่มไม่สำเร็จ: ' + data.error, 'error'); return; }
+      if (input) input.value = '';
+      renderAdminList(data.admins || []);
+      toast('✓ เพิ่ม Admin แล้ว', 'success');
+    } catch (err) { toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+  }
 
-    state.session.role = 'admin';
-    updateAdminUI();
-    closeAdminModal();
-    toast('✓ ปลดล็อกสิทธิ์ admin แล้ว', 'success');
+  async function removeAdminUser(email) {
+    if (!confirm(`ลบ ${email} ออกจาก Admin ใช่ไหม?`)) return;
+    if (!state.session.token) return;
+    try {
+      const res = await fetch(state.settings.sheetUrl, {
+        method: 'POST', mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'removeAdmin', token: state.session.token, email }),
+      });
+      const data = await res.json();
+      if (!data.ok) { toast('ลบไม่สำเร็จ: ' + data.error, 'error'); return; }
+      renderAdminList(data.admins || []);
+      toast('ลบ Admin แล้ว', 'orange');
+    } catch (err) { toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+  }
+
+  function saveGoogleClientId() {
+    const clientId = $('#googleClientId')?.value.trim();
+    if (!clientId) return;
+    state.settings.googleClientId = clientId;
+    initGoogleSignIn(clientId);
+    toast('✓ บันทึก Client ID แล้ว', 'success');
   }
 
   // ---------- Persistence (in-memory + Sheets) ----------
@@ -183,6 +283,7 @@ const App = (() => {
         body: JSON.stringify({
           action: 'save',
           secret: state.settings.secret,
+          token: state.session.token,
           workflows: workflowsArray,
         }),
       });
@@ -206,6 +307,12 @@ const App = (() => {
       const res = await fetch(url);
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Load failed');
+      if (data.clientId && !state.settings.googleClientId) {
+        state.settings.googleClientId = data.clientId;
+        const input = $('#googleClientId');
+        if (input) input.value = data.clientId;
+        initGoogleSignIn(data.clientId);
+      }
       updateSyncStatus('online');
       return data.workflows || [];
     } catch (err) {
@@ -655,6 +762,7 @@ const App = (() => {
     $('#sidebar').classList.remove('open');
     if (name === 'dashboard') renderDashboard();
     if (name === 'timeline') renderTimeline();
+    if (name === 'settings' && isAdmin()) loadAdminList();
   }
 
   // ---------- Workflow editor (drawer) ----------
@@ -1137,34 +1245,47 @@ const App = (() => {
 
   // ---------- Apps Script code (shown in settings) ----------
   const APPS_SCRIPT_CODE = `/**
- * MDT Workflow — Google Apps Script Backend
- * วาง script นี้ใน Apps Script ของ Google Sheet แล้ว Deploy เป็น Web App
+ * MDT Workflow — Google Apps Script Backend (v2 with Auth)
  *
- * คำแนะนำ: ตั้งค่า SECRET ให้ตรงกับในเว็บ (ถ้าต้องการความปลอดภัย)
- * ตั้ง Execute as: Me, Who has access: Anyone
+ * ขั้นตอนการตั้งค่า:
+ * 1. ใส่ GOOGLE_CLIENT_ID ที่ได้จาก Google Cloud Console ด้านล่าง
+ * 2. Deploy: Execute as Me · Who has access: Anyone
+ * 3. เพิ่ม Admin คนแรกในแท็บ AdminUsers ของ Google Sheet โดยตรง
+ *    → สร้าง sheet ชื่อ "AdminUsers" → Row 1: Email | Name | Added At | Added By
+ *    → Row 2: ใส่ email ของ admin คนแรก
  */
 
-const SECRET = ''; // ใส่รหัสลับ เช่น 'mysecret123' (ต้องตรงกับในเว็บ) หรือเว้นว่าง
+const SECRET = '';
 const SHEET_NAME = 'Workflows';
+const ADMIN_SHEET = 'AdminUsers';
+const GOOGLE_CLIENT_ID = ''; // ← ใส่ Client ID จาก Google Cloud Console
 
 function doGet(e) {
   try {
     const params = e.parameter || {};
     if (SECRET && params.secret !== SECRET) return _json({ ok: false, error: 'Invalid secret' });
-
     if (params.action === 'ping') return _json({ ok: true, msg: 'pong' });
+
+    if (params.action === 'checkRole') {
+      const user = _validateGoogleToken(params.token);
+      if (!user) return _json({ ok: false, error: 'Invalid token' });
+      return _json({ ok: true, email: user.email, name: user.name, role: _isAdmin(user.email) ? 'admin' : 'viewer' });
+    }
+
+    if (params.action === 'listAdmins') {
+      if (!_requireAdmin(params.token)) return _json({ ok: false, error: 'Unauthorized' });
+      return _json({ ok: true, admins: _getAdmins() });
+    }
 
     if (params.action === 'load') {
       const sheet = _getSheet();
       const data = sheet.getRange(1, 1).getValue();
       const workflows = data ? JSON.parse(data) : [];
-      return _json({ ok: true, workflows: workflows });
+      return _json({ ok: true, workflows, clientId: GOOGLE_CLIENT_ID });
     }
 
     return _json({ ok: false, error: 'Unknown action' });
-  } catch (err) {
-    return _json({ ok: false, error: String(err) });
-  }
+  } catch (err) { return _json({ ok: false, error: String(err) }); }
 }
 
 function doPost(e) {
@@ -1173,20 +1294,104 @@ function doPost(e) {
     if (SECRET && body.secret !== SECRET) return _json({ ok: false, error: 'Invalid secret' });
 
     if (body.action === 'save') {
+      const user = _requireAdmin(body.token);
+      if (!user) return _json({ ok: false, error: 'Unauthorized — ต้องเป็น Admin' });
       const sheet = _getSheet();
       sheet.getRange(1, 1).setValue(JSON.stringify(body.workflows || []));
-
-      // Also write a readable table for humans (sheet 2)
       _writeReadable(body.workflows || []);
-
       return _json({ ok: true, count: (body.workflows || []).length });
     }
 
+    if (body.action === 'addAdmin') {
+      const user = _requireAdmin(body.token);
+      if (!user) return _json({ ok: false, error: 'Unauthorized' });
+      const email = (body.email || '').trim().toLowerCase();
+      if (!email) return _json({ ok: false, error: 'No email' });
+      _addAdmin(email, body.name || email, user.email);
+      return _json({ ok: true, admins: _getAdmins() });
+    }
+
+    if (body.action === 'removeAdmin') {
+      const user = _requireAdmin(body.token);
+      if (!user) return _json({ ok: false, error: 'Unauthorized' });
+      const email = (body.email || '').trim().toLowerCase();
+      if (email === user.email.toLowerCase()) return _json({ ok: false, error: 'ไม่สามารถลบตัวเองได้' });
+      _removeAdmin(email);
+      return _json({ ok: true, admins: _getAdmins() });
+    }
+
     return _json({ ok: false, error: 'Unknown action' });
-  } catch (err) {
-    return _json({ ok: false, error: String(err) });
+  } catch (err) { return _json({ ok: false, error: String(err) }); }
+}
+
+// ── Auth helpers ──────────────────────────────────────────────
+
+function _validateGoogleToken(idToken) {
+  if (!idToken) return null;
+  try {
+    const res = UrlFetchApp.fetch(
+      'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+      { muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() !== 200) return null;
+    const data = JSON.parse(res.getContentText());
+    if (data.error) return null;
+    if (parseInt(data.exp) * 1000 < Date.now()) return null;
+    if (GOOGLE_CLIENT_ID && data.aud !== GOOGLE_CLIENT_ID) return null;
+    return { email: data.email, name: data.name || data.email };
+  } catch (err) { return null; }
+}
+
+function _isAdmin(email) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(ADMIN_SHEET);
+    if (!sheet || sheet.getLastRow() < 2) return false;
+    const emails = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1)
+      .getValues().flat().map(e => String(e).toLowerCase().trim()).filter(Boolean);
+    return emails.includes(email.toLowerCase().trim());
+  } catch (err) { return false; }
+}
+
+function _requireAdmin(token) {
+  const user = _validateGoogleToken(token);
+  if (!user || !_isAdmin(user.email)) return null;
+  return user;
+}
+
+function _getAdmins() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(ADMIN_SHEET);
+    if (!sheet || sheet.getLastRow() < 2) return [];
+    return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
+      .filter(r => r[0]).map(r => ({ email: r[0], name: r[1], addedAt: r[2], addedBy: r[3] }));
+  } catch (err) { return []; }
+}
+
+function _addAdmin(email, name, addedBy) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(ADMIN_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(ADMIN_SHEET);
+    sheet.getRange(1, 1, 1, 4).setValues([['Email', 'Name', 'Added At', 'Added By']]).setFontWeight('bold');
+  }
+  if (_isAdmin(email)) return;
+  sheet.appendRow([email, name, new Date().toISOString(), addedBy]);
+}
+
+function _removeAdmin(email) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(ADMIN_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let i = values.length - 1; i >= 0; i--) {
+    if (String(values[i][0]).toLowerCase().trim() === email.toLowerCase())
+      sheet.deleteRow(i + 2);
   }
 }
+
+// ── Sheet helpers ─────────────────────────────────────────────
 
 function _getSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -1203,38 +1408,30 @@ function _writeReadable(workflows) {
   let sheet = ss.getSheetByName('ReadableView');
   if (!sheet) sheet = ss.insertSheet('ReadableView');
   sheet.clear();
-
   const headers = ['Workflow', 'หมวดหมู่', 'สถานะ', 'ช่องทาง', 'ผู้รับผิดชอบ',
-                   'ขั้นตอนที่', 'ชื่อขั้นตอน', 'Step Owner', 'Step Status',
-                   'ระยะเวลา', 'รายละเอียด', 'Checklist', 'หมายเหตุ', 'Updated'];
+                   'ขั้นตอนที่', 'ชื่อขั้นตอน', 'Step Owner', 'ระยะเวลา',
+                   'รายละเอียด', 'Checklist', 'หมายเหตุ', 'Updated'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers])
     .setFontWeight('bold').setBackground('#FFE0CC').setFontColor('#A63E0D');
-
   const rows = [];
   workflows.forEach(w => {
     if (!w.steps || !w.steps.length) {
-      rows.push([w.name, w.category, w.status, w.channel, w.owner,
-                 '', '', '', '', '', w.description, '', '', w.updatedAt]);
+      rows.push([w.name, w.category, w.status, w.channel, w.owner, '', '', '', '', w.description, '', '', w.updatedAt]);
     } else {
       w.steps.forEach((s, i) => {
         const chk = (s.checklist || []).map(c => (c.done ? '☑ ' : '☐ ') + c.text).join('\\n');
         rows.push([w.name, w.category, w.status, w.channel, w.owner,
-                   i + 1, s.title, s.owner, s.status, s.duration,
-                   s.description, chk, s.notes, w.updatedAt]);
+                   i + 1, s.title, s.owner, s.duration, s.description, chk, s.notes, w.updatedAt]);
       });
     }
   });
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows)
-      .setWrap(true).setVerticalAlignment('top');
-  }
+  if (rows.length) sheet.getRange(2, 1, rows.length, headers.length).setValues(rows).setWrap(true).setVerticalAlignment('top');
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, headers.length);
 }
 
 function _json(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }`;
 
   // ---------- Init / Wire up ----------
@@ -1275,16 +1472,12 @@ function _json(obj) {
         closeStepModal(false);
       }
     });
-    $('#btnAdminAccess').addEventListener('click', openAdminModal);
-    $('#btnCloseAdminModal').addEventListener('click', closeAdminModal);
-    $('#adminModalOverlay').addEventListener('click', closeAdminModal);
-    $('#btnCancelAdminAccess').addEventListener('click', closeAdminModal);
-    $('#btnConfirmAdminAccess').addEventListener('click', unlockAdminAccess);
-    $('#adminAccessCode').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        unlockAdminAccess();
-      }
+    $('#btnSignIn').addEventListener('click', triggerSignIn);
+    $('#btnSignOut').addEventListener('click', signOut);
+    $('#btnSaveClientId').addEventListener('click', saveGoogleClientId);
+    $('#btnAddAdmin').addEventListener('click', addAdminUser);
+    $('#addAdminEmail').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addAdminUser(); }
     });
     $('#btnAddChecklist').addEventListener('click', addChecklistItem);
     $('#checklistInput').addEventListener('keydown', (e) => {
@@ -1319,7 +1512,7 @@ function _json(obj) {
     loadLocal();
 
     // Initial render
-    updateAdminUI();
+    updateAuthUI();
     renderAll();
 
     // Auto-load from sheet if configured
@@ -1342,7 +1535,6 @@ function _json(obj) {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (!$('#stepModal').hidden) closeStepModal(false);
-        else if (!$('#adminModal').hidden) closeAdminModal();
         else if (!$('#drawer').hidden) closeDrawer();
         else if (!$('#stepNav').hidden) closeStepNavigator();
       }
