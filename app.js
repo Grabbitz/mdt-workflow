@@ -55,7 +55,7 @@ const App = (() => {
       name: null,
     },
     view: 'workflows',
-    filter: { search: '', channel: '', status: '' },
+    filter: { search: '', channel: '' },
     connected: false,
   };
 
@@ -86,18 +86,6 @@ const App = (() => {
       return counts;
     }, {});
   }
-
-  const formatDate = (iso) => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    const now = new Date();
-    const diff = (now - d) / 1000;
-    if (diff < 60) return 'เมื่อสักครู่';
-    if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} วันที่แล้ว`;
-    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
 
   const toast = (msg, type = '') => {
     const container = $('#toastContainer');
@@ -487,10 +475,8 @@ const App = (() => {
 
     const channelRows = state.workflows.filter((w) => w.channel === channel);
     const visibleRows = getFilteredWorkflows();
-    const active = channelRows.filter((w) => w.status === 'active').length;
-    const draft = channelRows.filter((w) => w.status === 'draft').length;
     $('#channelContextTitle').textContent = channel;
-    $('#channelContextMeta').textContent = `พบ ${visibleRows.length} เรื่องจาก ${channelRows.length} เรื่องในช่องทางนี้ · ใช้งาน ${active} · ร่าง ${draft}`;
+    $('#channelContextMeta').textContent = `พบ ${visibleRows.length} เรื่องจาก ${channelRows.length} เรื่องในช่องทางนี้`;
     box.hidden = false;
   }
 
@@ -506,28 +492,16 @@ const App = (() => {
   }
 
   function getFilteredWorkflows() {
-    const { search, channel, status } = state.filter;
+    const { search, channel } = state.filter;
     return state.workflows.filter((w) => {
       if (channel && w.channel !== channel) return false;
-      if (status && w.status !== status) return false;
       if (search) {
         const q = search.toLowerCase();
-        const hay = [w.name, w.description, w.channel, w.owner, (w.tags || []).join(' ')].join(' ').toLowerCase();
+        const hay = [w.name, w.description, w.channel, (w.tags || []).join(' ')].join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }
-
-  function statusBadge(status) {
-    const map = {
-      draft:    ['badge', 'ร่าง'],
-      active:   ['badge-success', 'ใช้งาน'],
-      paused:   ['badge-warning', 'พัก'],
-      archived: ['badge', 'เก็บถาวร'],
-    };
-    const [cls, label] = map[status] || ['badge', status];
-    return `<span class="badge ${cls}">${label}</span>`;
   }
 
   function channelBadge(chan) {
@@ -558,7 +532,6 @@ const App = (() => {
                 <h3 class="wf-card-title">${escapeHtml(w.name || 'ไม่มีชื่อ')}</h3>
                 <div class="wf-card-meta" style="margin-top:6px">
                   ${channelBadge(w.channel)}
-                  ${statusBadge(w.status)}
                   ${w.category ? `<span class="badge">${escapeHtml(w.category)}</span>` : ''}
                 </div>
               </div>
@@ -567,7 +540,6 @@ const App = (() => {
             ${tags.length ? `<div class="tags-list">${tags.map((t) => `<span class="tag-pill">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
             <div class="wf-card-footer">
               <span>${steps.length} หัวข้อย่อย</span>
-              <span>${formatDate(w.updatedAt || w.createdAt)}</span>
             </div>
           </article>
         `;
@@ -668,7 +640,6 @@ const App = (() => {
             <div>
               <h3>${escapeHtml(w.name || 'ไม่มีชื่อ')}</h3>
               <div class="wf-card-meta">
-                ${statusBadge(w.status)}
                 ${w.category ? `<span class="badge">${escapeHtml(w.category)}</span>` : ''}
               </div>
             </div>
@@ -681,7 +652,6 @@ const App = (() => {
                 <span class="timeline-step-index">${stepIndex + 1}</span>
                 <div>
                   <strong>${escapeHtml(s.title || 'ยังไม่มีชื่อหัวข้อ')}</strong>
-                  <span>${escapeHtml(s.owner || 'ไม่ระบุผู้ให้ข้อมูล')}</span>
                 </div>
               </div>
             `).join('') : '<div class="timeline-step muted">ยังไม่มีหัวข้อย่อย</div>'}
@@ -712,7 +682,6 @@ const App = (() => {
         id: uid(),
         name: '',
         category: '',
-        status: 'active',
         channel: 'Lotus\'s',
         owner: '',
         description: '',
@@ -742,7 +711,6 @@ const App = (() => {
     const w = state.currentWorkflow;
     $('#wfName').value = w.name || '';
     $('#wfCategory').value = w.category || '';
-    $('#wfStatus').value = w.status || 'active';
     $('#wfChannel').value = w.channel || 'Lotus\'s';
     $('#wfOwner').value = w.owner || '';
     $('#wfDescription').value = w.description || '';
@@ -754,7 +722,6 @@ const App = (() => {
     const w = state.currentWorkflow;
     w.name = $('#wfName').value.trim();
     w.category = $('#wfCategory').value.trim();
-    w.status = $('#wfStatus').value;
     w.channel = $('#wfChannel').value;
     w.owner = $('#wfOwner').value.trim();
     w.description = $('#wfDescription').value.trim();
@@ -842,11 +809,6 @@ const App = (() => {
 
     $('#navContent').innerHTML = `<div class="chain">${steps.map((s, i) => {
       const isLast = i === steps.length - 1;
-      const ownerParts = [];
-      if (s.owner) ownerParts.push(`👤 ${escapeHtml(s.owner)}`);
-      if (s.duration) ownerParts.push(`📎 ${escapeHtml(s.duration)}`);
-      const ownerHtml = ownerParts.length ? `<div class="chain-meta">${ownerParts.join(' · ')}</div>` : '';
-
       const descHtml = s.description ? `<p class="chain-desc">${escapeHtml(s.description)}</p>` : '';
 
       const checklist = s.checklist || [];
@@ -882,7 +844,7 @@ const App = (() => {
           </div>
           <div class="chain-content">
             <h3 class="chain-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</h3>
-            ${ownerHtml}${descHtml}${checklistHtml}${infoHtml}${notesHtml}${attachHtml}
+            ${descHtml}${checklistHtml}${infoHtml}${notesHtml}${attachHtml}
           </div>
         </div>`;
     }).join('')}</div>`;
@@ -910,8 +872,6 @@ const App = (() => {
 
     list.innerHTML = steps
       .map((s, i) => {
-        const owner = s.owner ? `<span>👤 ${escapeHtml(s.owner)}</span>` : '';
-        const dur = s.duration ? `<span>⏱ ${escapeHtml(s.duration)}</span>` : '';
         const chk = s.checklist && s.checklist.length
           ? `<span>☑ ${s.checklist.filter((c) => c.done).length}/${s.checklist.length}</span>` : '';
         return `
@@ -923,8 +883,6 @@ const App = (() => {
             <div class="step-main">
               <span class="step-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</span>
               <div class="step-sub">
-                ${owner}
-                ${dur}
                 ${chk}
               </div>
             </div>
@@ -986,8 +944,6 @@ const App = (() => {
     const s = {
       id: stepUid(),
       title: '',
-      owner: '',
-      duration: '',
       description: '',
       checklist: [],
       tools: '',
@@ -1013,8 +969,6 @@ const App = (() => {
     $('#stepModalEyebrow').textContent = `หัวข้อย่อยที่ ${i + 1}`;
     $('#stepModalTitle').textContent = isNew ? 'เพิ่มหัวข้อย่อยใหม่' : 'รายละเอียดหัวข้อย่อย';
     $('#stepTitle').value = s.title || '';
-    $('#stepOwner').value = s.owner || '';
-    $('#stepDuration').value = s.duration || '';
     $('#stepDescription').value = s.description || '';
     $('#stepTools').value = s.tools || '';
     $('#stepDocuments').value = s.documents || '';
@@ -1038,8 +992,6 @@ const App = (() => {
     if (state.currentStepIndex == null) return;
     const s = state.currentWorkflow.steps[state.currentStepIndex];
     s.title = $('#stepTitle').value.trim();
-    s.owner = $('#stepOwner').value.trim();
-    s.duration = $('#stepDuration').value.trim();
     s.description = $('#stepDescription').value.trim();
     s.tools = $('#stepTools').value.trim();
     s.documents = $('#stepDocuments').value.trim();
@@ -1392,20 +1344,20 @@ function _writeReadable(workflows) {
   let sheet = ss.getSheetByName('ReadableView');
   if (!sheet) sheet = ss.insertSheet('ReadableView');
   sheet.clear();
-  const headers = ['Workflow', 'หมวดหมู่', 'สถานะ', 'ช่องทาง', 'ผู้รับผิดชอบ',
-                   'ขั้นตอนที่', 'ชื่อขั้นตอน', 'Step Owner', 'ระยะเวลา',
+  const headers = ['Workflow', 'หมวดหมู่', 'ช่องทาง', 'ผู้รับผิดชอบ',
+                   'ขั้นตอนที่', 'ชื่อขั้นตอน',
                    'รายละเอียด', 'Checklist', 'หมายเหตุ', 'Updated'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers])
     .setFontWeight('bold').setBackground('#FFE0CC').setFontColor('#A63E0D');
   const rows = [];
   workflows.forEach(w => {
     if (!w.steps || !w.steps.length) {
-      rows.push([w.name, w.category, w.status, w.channel, w.owner, '', '', '', '', w.description, '', '', w.updatedAt]);
+      rows.push([w.name, w.category, w.channel, w.owner, '', '', w.description, '', '', w.updatedAt]);
     } else {
       w.steps.forEach((s, i) => {
         const chk = (s.checklist || []).map(c => (c.done ? '☑ ' : '☐ ') + c.text).join('\\n');
-        rows.push([w.name, w.category, w.status, w.channel, w.owner,
-                   i + 1, s.title, s.owner, s.duration, s.description, chk, s.notes, w.updatedAt]);
+        rows.push([w.name, w.category, w.channel, w.owner,
+                   i + 1, s.title, s.description, chk, s.notes, w.updatedAt]);
       });
     }
   });
@@ -1499,7 +1451,6 @@ function _json(obj) {
     // Filters
     $('#searchInput').addEventListener('input', (e) => { state.filter.search = e.target.value; renderChannelContext(); renderWorkflowGrid(); renderTimeline(); });
     $('#filterChannel').addEventListener('change', (e) => setChannelFilter(e.target.value));
-    $('#filterStatus').addEventListener('change', (e) => { state.filter.status = e.target.value; renderChannelContext(); renderWorkflowGrid(); renderTimeline(); });
     $('#btnClearChannelFilter').addEventListener('click', () => setChannelFilter(''));
 
     // Settings

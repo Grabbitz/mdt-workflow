@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=eb09245" />
+  <link rel="stylesheet" href="styles.css?v=no-owner-time-20260508" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23E85D1F'/><path d='M8 22V10l4 6 4-6v12M20 10v12M20 10l4 4-4 4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
 </head>
 <body>
@@ -129,13 +129,6 @@
         <div class="filter-group">
           <select id="filterChannel" class="select-input">
             <option value="">ทุกช่องทาง / ลูกค้า</option>
-          </select>
-          <select id="filterStatus" class="select-input">
-            <option value="">ทุกสถานะ</option>
-            <option value="draft">ร่าง</option>
-            <option value="active">ใช้งาน</option>
-            <option value="paused">พัก</option>
-            <option value="archived">เก็บถาวร</option>
           </select>
         </div>
       </div>
@@ -327,15 +320,6 @@
               <option value="Lotus's">Lotus's</option>
             </select>
           </div>
-          <div class="form-group">
-            <label for="wfStatus">สถานะ</label>
-            <select id="wfStatus" class="select-input">
-              <option value="draft">ร่าง</option>
-              <option value="active" selected>ใช้งาน</option>
-              <option value="paused">พัก</option>
-              <option value="archived">เก็บถาวร</option>
-            </select>
-          </div>
         </div>
 
         <div class="form-row">
@@ -398,17 +382,6 @@
       <div class="form-group">
         <label for="stepTitle">ชื่อหัวข้อย่อย</label>
         <input type="text" id="stepTitle" placeholder="เช่น ตรวจสอบเอกสารให้ครบถ้วน" />
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="stepOwner">ผู้ให้ข้อมูล</label>
-          <input type="text" id="stepOwner" placeholder="ชื่อ / ตำแหน่ง" />
-        </div>
-        <div class="form-group">
-          <label for="stepDuration">อ้างอิง</label>
-          <input type="text" id="stepDuration" placeholder="เช่น ประกาศบริษัท, Link" />
-        </div>
       </div>
 
       <div class="form-group">
@@ -522,7 +495,7 @@
   <!-- ===================== TOAST ===================== -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=eb09245"></script>
+  <script src="app.js?v=no-owner-time-20260508"></script>
 <script data-pplx-inline-edit>
 (function () {
   if (window === window.top) return;
