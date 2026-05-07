@@ -134,7 +134,7 @@ const App = (() => {
         text: 'signin_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: container.offsetWidth || 200,
+        width: 180,
       });
       // Show fallback button if renderButton produced nothing after a tick
       setTimeout(() => {

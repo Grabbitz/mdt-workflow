@@ -391,7 +391,11 @@ a:hover { color: var(--text); }
   border-top: 1px solid var(--divider);
   padding-top: var(--space-3);
   flex-wrap: nowrap;
+  overflow: hidden;
 }
+#gsiBtn { flex: 1; min-width: 0; overflow: hidden; }
+#gsiBtn > div { width: 100% !important; }
+#gsiBtn iframe { width: 100% !important; min-width: 0 !important; }
 .sidebar-auth-btn {
   display: flex;
   align-items: center;
