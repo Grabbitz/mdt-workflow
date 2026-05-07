@@ -370,17 +370,20 @@ a:hover { color: var(--text); }
     var(--bg);
 }
 
-.mobile-topbar {
-  display: none;
+.topbar {
+  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 15;
+  min-height: 52px;
 }
+.topbar-spacer { flex: 1; }
+.topbar-mobile-only { display: none; }
 .mobile-title { font-weight: 600; font-size: var(--text-base); letter-spacing: -0.01em; }
 
 .view { display: none; animation: fadeIn 320ms var(--ease-out); }
@@ -1826,7 +1829,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
     box-shadow: var(--shadow-lg);
   }
   .sidebar.open { transform: translateX(0); }
-  .mobile-topbar { display: flex; }
+  .topbar-mobile-only { display: flex; }
   .main { padding: var(--space-5) var(--space-4); }
   .page-title { font-size: 1.25rem; }
   .timeline-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
