@@ -151,8 +151,10 @@ const App = (() => {
       return;
     }
     try {
-      const url = state.settings.sheetUrl + '?action=checkRole&token=' + encodeURIComponent(idToken);
-      const res = await fetch(url);
+      const res = await fetch(state.settings.sheetUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'checkRole', token: idToken }),
+      });
       const data = await res.json();
       if (!data.ok) { toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return; }
       if (data.role !== 'admin') { toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return; }
@@ -1312,6 +1314,12 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     if (SECRET && body.secret !== SECRET) return _json({ ok: false, error: 'Invalid secret' });
+
+    if (body.action === 'checkRole') {
+      const user = _validateGoogleToken(body.token);
+      if (!user) return _json({ ok: false, error: 'Invalid token' });
+      return _json({ ok: true, email: user.email, name: user.name, role: _isAdmin(user.email) ? 'admin' : 'viewer' });
+    }
 
     if (body.action === 'save') {
       const user = _requireAdmin(body.token);
