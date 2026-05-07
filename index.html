@@ -466,6 +466,33 @@
     </footer>
   </div>
 
+  <!-- ===================== STEP NAVIGATOR ===================== -->
+  <div class="step-nav" id="stepNav" hidden aria-label="อ่าน Workflow แบบขั้นตอน">
+    <header class="step-nav-header">
+      <div class="step-nav-header-left">
+        <button class="icon-btn" id="btnCloseStepNav" aria-label="กลับ">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="step-nav-wf-info">
+          <div class="step-nav-wf-badges" id="navBadges"></div>
+          <h1 class="step-nav-wf-title" id="navWfTitle"></h1>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btnNavEdit">แก้ไข</button>
+    </header>
+
+    <div class="step-nav-body">
+      <p class="step-nav-wf-desc" id="navWfDesc" hidden></p>
+      <div class="step-nav-counter" id="navCounter"></div>
+      <div id="navContent"></div>
+    </div>
+
+    <footer class="step-nav-footer">
+      <button class="btn btn-ghost" id="btnNavPrev" hidden></button>
+      <button class="btn btn-ghost" id="btnNavNext" hidden></button>
+    </footer>
+  </div>
+
   <!-- ===================== TOAST ===================== -->
   <div class="toast-container" id="toastContainer"></div>
 
