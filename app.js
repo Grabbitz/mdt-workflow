@@ -222,8 +222,6 @@ const App = (() => {
     const adm = isAdmin();
     const fallback = $('#btnSignIn');
     if (fallback) fallback.style.display = adm ? 'none' : '';
-    const topSignIn = $('#btnTopSignIn');
-    if (topSignIn) topSignIn.hidden = adm;
     $('#userChip').hidden = !adm;
     const navSettings = $('#navSettings');
     if (navSettings) navSettings.hidden = !adm;
@@ -1529,7 +1527,6 @@ function _json(obj) {
       }
     });
     $('#btnSignIn').addEventListener('click', triggerSignIn);
-    $('#btnTopSignIn')?.addEventListener('click', triggerSignIn);
     $('#btnSignOut').addEventListener('click', signOut);
     $('#btnCloseSignIn').addEventListener('click', closeSignInModal);
     $('#signInOverlay').addEventListener('click', closeSignInModal);
