@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=no-owner-time-20260508" />
+  <link rel="stylesheet" href="styles.css?v=price-tools-20260508" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23E85D1F'/><path d='M8 22V10l4 6 4-6v12M20 10v12M20 10l4 4-4 4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
 </head>
 <body>
@@ -38,6 +38,10 @@
       <button class="nav-item" data-view="timeline">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M18 6H8a2 2 0 000 4h8a2 2 0 010 4H6"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/></svg>
         <span>Workflow Timeline</span>
+      </button>
+      <button class="nav-item" data-view="pricing">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7H14a3.5 3.5 0 010 7H6"/><path d="M19 15l-4 4 4 4"/></svg>
+        <span>คำนวณราคา</span>
       </button>
       <button class="nav-item" data-view="settings" id="navSettings" hidden>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
@@ -161,6 +165,215 @@
 
       <div class="timeline-summary" id="timelineSummary"></div>
       <div class="timeline-list" id="timelineList"></div>
+    </section>
+
+    <!-- ============ VIEW: PRICING ============ -->
+    <section class="view view-pricing" data-view-content="pricing">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">Price Tools</span>
+          <h1 class="page-title">คำนวณราคาและโปรโมชั่น</h1>
+          <p class="page-sub">เช็กส่วนลด โปรโมชัน และเรทราคาตามจำนวนซื้อ</p>
+        </div>
+      </header>
+
+      <div class="pricing-tabs" role="tablist" aria-label="เครื่องมือคำนวณราคา">
+        <button class="pricing-tab active" data-pricing-tab="discount" type="button">ส่วนลด</button>
+        <button class="pricing-tab" data-pricing-tab="promo" type="button">โปรโมชั่น</button>
+        <button class="pricing-tab" data-pricing-tab="tier" type="button">Tier</button>
+        <button class="pricing-tab" data-pricing-tab="cost" type="button">ต้นทุน</button>
+      </div>
+
+      <div class="pricing-panel active" data-pricing-panel="discount">
+        <div class="pricing-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="discountBasePrice">ราคาปกติ</label>
+              <input type="number" id="discountBasePrice" min="0" step="0.01" value="1000" />
+            </div>
+            <div class="form-group">
+              <label for="discountSalePrice">ราคาหลังลด</label>
+              <input type="number" id="discountSalePrice" min="0" step="0.01" value="850" />
+            </div>
+            <div class="form-group">
+              <label for="discountQty">จำนวน</label>
+              <input type="number" id="discountQty" min="1" step="1" value="12" />
+            </div>
+          </div>
+        </div>
+        <div class="pricing-results">
+          <div class="price-result primary">
+            <span>ส่วนลด</span>
+            <strong id="discountPercentResult">0%</strong>
+          </div>
+          <div class="price-result">
+            <span>ลด / ชิ้น</span>
+            <strong id="discountPerUnitResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ประหยัดรวม</span>
+            <strong id="discountTotalSaveResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ยอดสุทธิ</span>
+            <strong id="discountNetResult">฿0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing-panel" data-pricing-panel="promo">
+        <div class="pricing-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="promoUnitPrice">ราคา / ชิ้น</label>
+              <input type="number" id="promoUnitPrice" min="0" step="0.01" value="1000" />
+            </div>
+            <div class="form-group">
+              <label for="promoQty">จำนวนซื้อ</label>
+              <input type="number" id="promoQty" min="1" step="1" value="12" />
+            </div>
+            <div class="form-group">
+              <label for="promoType">ประเภทโปร</label>
+              <select id="promoType" class="select-input">
+                <option value="percent">% off</option>
+                <option value="amount">บาท off</option>
+                <option value="bogo">Buy X Get Y</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group promo-value-field">
+              <label for="promoValue" id="promoValueLabel">% ส่วนลด</label>
+              <input type="number" id="promoValue" min="0" step="0.01" value="10" />
+            </div>
+            <div class="form-group promo-bogo-field" hidden>
+              <label for="promoBuyQty">Buy</label>
+              <input type="number" id="promoBuyQty" min="1" step="1" value="10" />
+            </div>
+            <div class="form-group promo-bogo-field" hidden>
+              <label for="promoFreeQty">Get</label>
+              <input type="number" id="promoFreeQty" min="1" step="1" value="1" />
+            </div>
+          </div>
+        </div>
+        <div class="pricing-results">
+          <div class="price-result primary">
+            <span>Effective discount</span>
+            <strong id="promoEffectiveDiscountResult">0%</strong>
+          </div>
+          <div class="price-result">
+            <span>ราคาสุทธิ / ชิ้น</span>
+            <strong id="promoNetUnitResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ยอดสุทธิ</span>
+            <strong id="promoNetTotalResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ของแถม</span>
+            <strong id="promoFreeUnitsResult">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing-panel" data-pricing-panel="tier">
+        <div class="pricing-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tierUnitPrice">ราคา / ชิ้น</label>
+              <input type="number" id="tierUnitPrice" min="0" step="0.01" value="1000" />
+            </div>
+            <div class="form-group">
+              <label for="tierQty">จำนวนซื้อ</label>
+              <input type="number" id="tierQty" min="1" step="1" value="5" />
+            </div>
+          </div>
+          <div class="tier-presets" aria-label="ชุดเรทส่วนลด">
+            <button class="tier-preset active" data-tier-preset="base" type="button">Default</button>
+            <button class="tier-preset" data-tier-preset="plus5" type="button">+5%</button>
+          </div>
+          <div class="tier-table" aria-label="ตารางส่วนลดตามจำนวน">
+            <div class="tier-row tier-head">
+              <span>ขั้นต่ำ</span>
+              <span>ส่วนลด %</span>
+            </div>
+            <div class="tier-row">
+              <input type="number" class="tier-min" min="1" step="1" value="5" />
+              <input type="number" class="tier-discount" min="0" max="100" step="0.01" value="10" />
+            </div>
+            <div class="tier-row">
+              <input type="number" class="tier-min" min="1" step="1" value="11" />
+              <input type="number" class="tier-discount" min="0" max="100" step="0.01" value="15" />
+            </div>
+            <div class="tier-row">
+              <input type="number" class="tier-min" min="1" step="1" value="21" />
+              <input type="number" class="tier-discount" min="0" max="100" step="0.01" value="20" />
+            </div>
+          </div>
+        </div>
+        <div class="pricing-results">
+          <div class="price-result primary">
+            <span>Tier ที่ได้</span>
+            <strong id="tierMatchedResult">-</strong>
+          </div>
+          <div class="price-result">
+            <span>ส่วนลด</span>
+            <strong id="tierDiscountResult">0%</strong>
+          </div>
+          <div class="price-result">
+            <span>ราคาหลังลด / ชิ้น</span>
+            <strong id="tierNetUnitResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ยอดสุทธิ</span>
+            <strong id="tierNetTotalResult">฿0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing-panel" data-pricing-panel="cost">
+        <div class="pricing-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="costChannel">Channel</label>
+              <select id="costChannel" class="select-input"></select>
+            </div>
+            <div class="form-group">
+              <label for="costSellingPrice">ราคาขาย / ชิ้น</label>
+              <input type="number" id="costSellingPrice" min="0" step="0.01" value="1000" />
+            </div>
+            <div class="form-group">
+              <label for="costQty">จำนวน</label>
+              <input type="number" id="costQty" min="1" step="1" value="12" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="costGpPercent">GP% จาก Workflow</label>
+              <input type="number" id="costGpPercent" min="0" max="100" step="0.01" value="0" />
+              <span class="form-hint" id="costGpSource">เลือก Channel เพื่อดึง GP% จากข้อมูล workflow</span>
+            </div>
+          </div>
+        </div>
+        <div class="pricing-results">
+          <div class="price-result primary">
+            <span>ต้นทุน / ชิ้น</span>
+            <strong id="costUnitResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>กำไร / ชิ้น</span>
+            <strong id="costProfitUnitResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>ต้นทุนรวม</span>
+            <strong id="costTotalResult">฿0</strong>
+          </div>
+          <div class="price-result">
+            <span>กำไรรวม</span>
+            <strong id="costProfitTotalResult">฿0</strong>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ============ VIEW: SETTINGS ============ -->
@@ -495,7 +708,7 @@
   <!-- ===================== TOAST ===================== -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=no-owner-time-20260508"></script>
+  <script src="app.js?v=price-tools-20260508"></script>
 <script data-pplx-inline-edit>
 (function () {
   if (window === window.top) return;

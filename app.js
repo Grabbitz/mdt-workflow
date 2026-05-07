@@ -661,6 +661,239 @@ const App = (() => {
     `;
   }
 
+  // ---------- Pricing tools ----------
+  const moneyFormatter = new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+
+  const numberValue = (selector, fallback = 0) => {
+    const value = Number($(selector)?.value);
+    return Number.isFinite(value) ? value : fallback;
+  };
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  const money = (value) => moneyFormatter.format(Number.isFinite(value) ? value : 0);
+  const percent = (value) => `${(Number.isFinite(value) ? value : 0).toFixed(1)}%`;
+  const tierPresets = {
+    base: [
+      { min: 5, discount: 10 },
+      { min: 11, discount: 15 },
+      { min: 21, discount: 20 },
+    ],
+    plus5: [
+      { min: 5, discount: 15 },
+      { min: 11, discount: 20 },
+      { min: 21, discount: 25 },
+    ],
+  };
+
+  function setPricingTab(name) {
+    $$('.pricing-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.pricingTab === name));
+    $$('.pricing-panel').forEach((panel) => panel.classList.toggle('active', panel.dataset.pricingPanel === name));
+    renderPricingCalculator();
+  }
+
+  function renderPricingCalculator() {
+    renderDiscountCalculator();
+    renderPromoCalculator();
+    renderTierCalculator();
+    renderCostCalculator();
+  }
+
+  function renderDiscountCalculator() {
+    if (!$('#discountBasePrice')) return;
+    const base = Math.max(numberValue('#discountBasePrice'), 0);
+    const sale = Math.max(numberValue('#discountSalePrice'), 0);
+    const qty = Math.max(Math.floor(numberValue('#discountQty', 1)), 1);
+    const unitDiscount = Math.max(base - sale, 0);
+    const discountPct = base > 0 ? (unitDiscount / base) * 100 : 0;
+
+    $('#discountPercentResult').textContent = percent(discountPct);
+    $('#discountPerUnitResult').textContent = money(unitDiscount);
+    $('#discountTotalSaveResult').textContent = money(unitDiscount * qty);
+    $('#discountNetResult').textContent = money(sale * qty);
+  }
+
+  function renderPromoCalculator() {
+    if (!$('#promoUnitPrice')) return;
+    const price = Math.max(numberValue('#promoUnitPrice'), 0);
+    const qty = Math.max(Math.floor(numberValue('#promoQty', 1)), 1);
+    const type = $('#promoType').value;
+    const value = Math.max(numberValue('#promoValue'), 0);
+    let netTotal = price * qty;
+    let freeUnits = 0;
+
+    $$('.promo-value-field').forEach((el) => { el.hidden = type === 'bogo'; });
+    $$('.promo-bogo-field').forEach((el) => { el.hidden = type !== 'bogo'; });
+    $('#promoValueLabel').textContent = type === 'amount' ? 'ลดบาท / ชิ้น' : '% ส่วนลด';
+
+    if (type === 'percent') {
+      netTotal = price * qty * (1 - clamp(value, 0, 100) / 100);
+    } else if (type === 'amount') {
+      netTotal = Math.max(price - value, 0) * qty;
+    } else if (type === 'bogo') {
+      const buy = Math.max(Math.floor(numberValue('#promoBuyQty', 1)), 1);
+      const get = Math.max(Math.floor(numberValue('#promoFreeQty', 1)), 1);
+      const setSize = buy + get;
+      freeUnits = Math.floor(qty / setSize) * get;
+      netTotal = Math.max(qty - freeUnits, 0) * price;
+    }
+
+    const gross = price * qty;
+    const effectiveDiscount = gross > 0 ? ((gross - netTotal) / gross) * 100 : 0;
+    const netUnit = qty > 0 ? netTotal / qty : 0;
+
+    $('#promoEffectiveDiscountResult').textContent = percent(effectiveDiscount);
+    $('#promoNetUnitResult').textContent = money(netUnit);
+    $('#promoNetTotalResult').textContent = money(netTotal);
+    $('#promoFreeUnitsResult').textContent = `${freeUnits} ชิ้น`;
+  }
+
+  function getTierRows() {
+    return $$('.tier-row:not(.tier-head)').map((row) => ({
+      min: Math.max(Number($('.tier-min', row).value) || 0, 0),
+      discount: clamp(Number($('.tier-discount', row).value) || 0, 0, 100),
+    })).filter((tier) => tier.min > 0).sort((a, b) => a.min - b.min);
+  }
+
+  function applyTierPreset(name) {
+    const preset = tierPresets[name] || tierPresets.base;
+    const rows = $$('.tier-row:not(.tier-head)');
+    rows.forEach((row, index) => {
+      const tier = preset[index];
+      if (!tier) return;
+      $('.tier-min', row).value = tier.min;
+      $('.tier-discount', row).value = tier.discount;
+    });
+    $$('.tier-preset').forEach((btn) => btn.classList.toggle('active', btn.dataset.tierPreset === name));
+    renderTierCalculator();
+  }
+
+  function renderTierCalculator() {
+    if (!$('#tierUnitPrice')) return;
+    const price = Math.max(numberValue('#tierUnitPrice'), 0);
+    const qty = Math.max(Math.floor(numberValue('#tierQty', 1)), 1);
+    const matched = getTierRows().reduce((best, tier) => (qty >= tier.min ? tier : best), null);
+    const discount = matched ? matched.discount : 0;
+    const netUnit = price * (1 - discount / 100);
+    const netTotal = netUnit * qty;
+
+    $('#tierMatchedResult').textContent = matched ? `${matched.min}+ ชิ้น` : '-';
+    $('#tierDiscountResult').textContent = percent(discount);
+    $('#tierNetUnitResult').textContent = money(netUnit);
+    $('#tierNetTotalResult').textContent = money(netTotal);
+  }
+
+  function workflowSearchText(workflow) {
+    const steps = workflow.steps || [];
+    return [
+      workflow.name,
+      workflow.category,
+      workflow.channel,
+      workflow.description,
+      (workflow.tags || []).join(' '),
+      ...steps.flatMap((step) => [
+        step.title,
+        step.description,
+        step.tools,
+        step.documents,
+        step.notes,
+        ...(step.checklist || []).map((item) => item.text),
+      ]),
+    ].filter(Boolean).join(' ');
+  }
+
+  function extractGpFromText(text) {
+    const patterns = [
+      /(?:gp|g\.p\.|gp%|gross profit|margin|กำไรขั้นต้น)\s*(?:%|percent|เปอร์เซ็นต์)?\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)\s*%?/i,
+      /([0-9]+(?:\.[0-9]+)?)\s*%\s*(?:gp|g\.p\.|gross profit|margin|กำไรขั้นต้น)/i,
+    ];
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) return clamp(Number(match[1]), 0, 100);
+    }
+    return null;
+  }
+
+  function getChannelGpPercent(channel) {
+    if (!channel) return null;
+    const rows = state.workflows.filter((workflow) => workflow.channel === channel);
+    const prioritizedRows = [
+      ...rows.filter((workflow) => /gp|pricing|cost|ราคา|ต้นทุน/i.test(workflow.category || '')),
+      ...rows.filter((workflow) => !/gp|pricing|cost|ราคา|ต้นทุน/i.test(workflow.category || '')),
+    ];
+    for (const workflow of prioritizedRows) {
+      const gp = extractGpFromText(workflowSearchText(workflow));
+      if (gp !== null) return gp;
+    }
+    return null;
+  }
+
+  function renderCostChannelOptions() {
+    const select = $('#costChannel');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = getChannelList()
+      .map((channel) => `<option value="${escapeHtml(channel)}">${escapeHtml(channel)}</option>`)
+      .join('');
+    select.value = current && getChannelList().includes(current) ? current : getChannelList()[0];
+    syncGpFromSelectedChannel();
+  }
+
+  function syncGpFromSelectedChannel() {
+    const select = $('#costChannel');
+    const input = $('#costGpPercent');
+    const source = $('#costGpSource');
+    if (!select || !input || !source) return;
+    const channel = select.value;
+    const gp = getChannelGpPercent(channel);
+    if (gp !== null) {
+      input.value = gp;
+      source.textContent = `ดึง GP% จาก workflow ของ ${channel}`;
+    } else {
+      source.textContent = `ไม่พบ GP% ใน workflow ของ ${channel} · กรอกเองได้`;
+    }
+    renderCostCalculator();
+  }
+
+  function renderCostCalculator() {
+    if (!$('#costSellingPrice')) return;
+    const price = Math.max(numberValue('#costSellingPrice'), 0);
+    const qty = Math.max(Math.floor(numberValue('#costQty', 1)), 1);
+    const gp = clamp(numberValue('#costGpPercent'), 0, 100);
+    const costUnit = price * (1 - gp / 100);
+    const profitUnit = price - costUnit;
+
+    $('#costUnitResult').textContent = money(costUnit);
+    $('#costProfitUnitResult').textContent = money(profitUnit);
+    $('#costTotalResult').textContent = money(costUnit * qty);
+    $('#costProfitTotalResult').textContent = money(profitUnit * qty);
+  }
+
+  function normalizeStepLink(link) {
+    const value = String(link || '').trim();
+    if (!value) return '';
+    if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(value)) return value;
+    if (/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(value)) return `https://${value}`;
+    return value;
+  }
+
+  function stepLinkLabel(link, index) {
+    const value = String(link || '').trim();
+    if (!value) return `Link ${index + 1}`;
+    try {
+      const parsed = new URL(normalizeStepLink(value), window.location.href);
+      return parsed.hostname && parsed.hostname !== window.location.hostname
+        ? parsed.hostname.replace(/^www\./, '')
+        : `Link ${index + 1}`;
+    } catch (_err) {
+      return `Link ${index + 1}`;
+    }
+  }
+
   // ---------- View switching ----------
   function switchView(name) {
     state.view = name;
@@ -668,6 +901,7 @@ const App = (() => {
     $$('.view').forEach((v) => v.classList.toggle('active', v.dataset.viewContent === name));
     $('#sidebar').classList.remove('open');
     if (name === 'timeline') renderTimeline();
+    if (name === 'pricing') renderPricingCalculator();
     if (name === 'settings' && isAdmin()) loadAdminList();
   }
 
@@ -748,6 +982,7 @@ const App = (() => {
 
     toast('✓ บันทึกข้อมูลแล้ว', 'success');
     renderAll();
+    renderCostChannelOptions();
     closeDrawer();
     if (!$('#stepNav').hidden && _navWfId === w.id) renderStepNav();
   }
@@ -829,6 +1064,16 @@ const App = (() => {
 
       const notesHtml = s.notes ? `<div class="chain-notes">${escapeHtml(s.notes)}</div>` : '';
 
+      const links = s.links || [];
+      const linksHtml = links.length ? `
+        <div class="chain-links">
+          <span class="chain-info-label">Links</span>
+          ${links.map((link, li) => {
+            const href = normalizeStepLink(link);
+            return href ? `<a class="chain-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(stepLinkLabel(link, li))}</a>` : '';
+          }).join('')}
+        </div>` : '';
+
       const attachments = s.attachments || [];
       const attachHtml = attachments.length ? `
         <div class="chain-attachments">
@@ -844,7 +1089,7 @@ const App = (() => {
           </div>
           <div class="chain-content">
             <h3 class="chain-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</h3>
-            ${descHtml}${checklistHtml}${infoHtml}${notesHtml}${attachHtml}
+            ${descHtml}${checklistHtml}${infoHtml}${linksHtml}${notesHtml}${attachHtml}
           </div>
         </div>`;
     }).join('')}</div>`;
@@ -1134,6 +1379,7 @@ const App = (() => {
       state.workflows = data;
       persistLocal();
       renderAll();
+      renderCostChannelOptions();
       toast(`✓ ดึงข้อมูล ${data.length} รายการจาก Sheet`, 'success');
     }
   }
@@ -1159,6 +1405,7 @@ const App = (() => {
         state.workflows = data;
         persist();
         renderAll();
+        renderCostChannelOptions();
         toast(`✓ Import ${data.length} รายการ`, 'success');
       } catch (err) {
         toast('❌ ไฟล์ไม่ถูกต้อง', 'error');
@@ -1453,6 +1700,15 @@ function _json(obj) {
     $('#filterChannel').addEventListener('change', (e) => setChannelFilter(e.target.value));
     $('#btnClearChannelFilter').addEventListener('click', () => setChannelFilter(''));
 
+    // Pricing tools
+    $$('.pricing-tab').forEach((tab) => tab.addEventListener('click', () => setPricingTab(tab.dataset.pricingTab)));
+    $$('.view-pricing input, .view-pricing select').forEach((input) => {
+      input.addEventListener('input', renderPricingCalculator);
+      input.addEventListener('change', renderPricingCalculator);
+    });
+    $$('.tier-preset').forEach((btn) => btn.addEventListener('click', () => applyTierPreset(btn.dataset.tierPreset)));
+    $('#costChannel').addEventListener('change', syncGpFromSelectedChannel);
+
     // Settings
     $('#appsScriptCode').textContent = APPS_SCRIPT_CODE;
     $('#btnCopyScript').addEventListener('click', () => {
@@ -1478,6 +1734,8 @@ function _json(obj) {
     updateAuthUI();
     initGoogleSignIn(state.settings.googleClientId);
     renderAll();
+    renderCostChannelOptions();
+    renderPricingCalculator();
 
     // Auto-load from sheet if configured
     if (state.settings.sheetUrl) {
@@ -1487,6 +1745,7 @@ function _json(obj) {
           state.workflows = data;
           persistLocal();
           renderAll();
+          renderCostChannelOptions();
         }
       })();
     }

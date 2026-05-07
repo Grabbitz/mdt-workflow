@@ -619,7 +619,7 @@ a:hover { color: var(--text); }
 .label-hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-faint); }
 .form-hint { font-size: var(--text-xs); color: var(--text-faint); }
 
-input[type="text"], input[type="url"], input[type="email"], textarea, .select-input {
+input[type="text"], input[type="url"], input[type="email"], input[type="number"], textarea, .select-input {
   padding: var(--space-3) var(--space-4);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
@@ -634,6 +634,7 @@ input[type="text"], input[type="url"], input[type="email"], textarea, .select-in
 input[type="text"]::placeholder,
 input[type="url"]::placeholder,
 input[type="email"]::placeholder,
+input[type="number"]::placeholder,
 textarea::placeholder { color: var(--text-faint); }
 input:focus, textarea:focus, .select-input:focus {
   border-color: var(--border-strong);
@@ -1506,6 +1507,143 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .activity-time { font-size: var(--text-xs); color: var(--text-faint); margin-top: 2px; }
 
 /* ============================================
+   PRICING TOOLS
+   ============================================ */
+.view-pricing {
+  max-width: 980px;
+}
+
+.pricing-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ring);
+}
+
+.pricing-tab {
+  min-width: 104px;
+  min-height: 34px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.pricing-tab:hover { color: var(--text); background: var(--surface-2); }
+.pricing-tab.active {
+  color: var(--text);
+  background: var(--surface-3);
+  box-shadow: var(--shadow-highlight);
+}
+
+.pricing-panel {
+  display: none;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.pricing-panel.active { display: grid; }
+
+.pricing-form,
+.pricing-results {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-ring);
+}
+
+.pricing-form {
+  padding: var(--space-5);
+}
+
+.pricing-results {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.price-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 62px;
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.025);
+}
+.price-result span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.price-result strong {
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: right;
+}
+.price-result.primary {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--divider);
+}
+.price-result.primary strong {
+  color: var(--orange);
+  font-size: var(--text-xl);
+}
+
+.tier-table {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tier-presets {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.tier-preset {
+  min-height: 32px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+.tier-preset:hover { color: var(--text); background: var(--surface-3); }
+.tier-preset.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-highlight);
+}
+
+.tier-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: center;
+}
+.tier-head {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ============================================
    SETTINGS
    ============================================ */
 .settings-grid {
@@ -1915,6 +2053,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   .timeline-channel-head { flex-direction: column; }
   .timeline-channel-stats { justify-content: flex-start; }
   .dashboard-summary { align-items: stretch; flex-direction: column; }
+  .pricing-panel { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -1927,6 +2066,10 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   .timeline-card-head { flex-direction: column; }
   .timeline-item { gap: var(--space-3); }
   .workflow-grid { grid-template-columns: 1fr; }
+  .pricing-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+  .pricing-tab { min-width: 0; padding-inline: var(--space-2); }
+  .price-result { align-items: flex-start; flex-direction: column; gap: var(--space-1); }
+  .price-result strong { text-align: left; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2114,6 +2257,7 @@ html[data-theme="light"] [data-theme-toggle] .icon-moon { display: none; }
 }
 
 /* Attachment links in chain (step navigator) */
+.chain-links,
 .chain-attachments {
   display: flex;
   flex-wrap: wrap;
@@ -2121,6 +2265,7 @@ html[data-theme="light"] [data-theme-toggle] .icon-moon { display: none; }
   gap: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
 }
+.chain-link,
 .chain-attachment-link {
   color: var(--text-muted);
   text-decoration: none;
@@ -2134,4 +2279,5 @@ html[data-theme="light"] [data-theme-toggle] .icon-moon { display: none; }
   max-width: 240px;
   display: inline-block;
 }
+.chain-link:hover,
 .chain-attachment-link:hover { color: var(--orange); border-color: var(--orange); }
