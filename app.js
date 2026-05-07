@@ -776,9 +776,6 @@ const App = (() => {
 
   // ---------- View switching ----------
   function switchView(name) {
-    if (name === 'settings' && !ensureAdmin('ต้องเป็น admin จึงจะเข้า Settings ได้')) {
-      return;
-    }
     state.view = name;
     $$('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
     $$('.view').forEach((v) => v.classList.toggle('active', v.dataset.viewContent === name));
