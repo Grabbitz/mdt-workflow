@@ -136,6 +136,11 @@ const App = (() => {
         logo_alignment: 'left',
         width: container.offsetWidth || 200,
       });
+      // Show fallback button if renderButton produced nothing after a tick
+      setTimeout(() => {
+        const fallback = $('#btnSignIn');
+        if (fallback) fallback.style.display = container.children.length ? 'none' : '';
+      }, 800);
     }
   }
 
@@ -192,7 +197,9 @@ const App = (() => {
   function updateAuthUI() {
     const adm = isAdmin();
     const gsiBtn = $('#gsiBtn');
+    const fallback = $('#btnSignIn');
     if (gsiBtn) gsiBtn.style.display = adm ? 'none' : '';
+    if (fallback && adm) fallback.style.display = 'none';
     $('#userChip').hidden = !adm;
     if (adm) {
       $('#userAvatar').textContent = (state.session.name || 'A')[0].toUpperCase();
@@ -1488,6 +1495,7 @@ function _json(obj) {
         closeStepModal(false);
       }
     });
+    $('#btnSignIn').addEventListener('click', triggerSignIn);
     $('#btnSignOut').addEventListener('click', signOut);
     $('#btnSaveClientId').addEventListener('click', saveGoogleClientId);
     $('#btnAddAdmin').addEventListener('click', addAdminUser);
