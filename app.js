@@ -156,11 +156,20 @@ const App = (() => {
       toast('กรุณาตั้งค่า Apps Script URL ก่อน', 'error');
       return;
     }
+    const btn = $('#btnSignIn');
+    const btnLabel = btn?.querySelector('span');
+    if (btn) { btn.disabled = true; if (btnLabel) btnLabel.textContent = 'กำลังตรวจสอบ...'; }
     try {
       const res = await fetch(state.settings.sheetUrl + '?action=checkRole&email=' + encodeURIComponent(claims.email));
       const data = await res.json();
-      if (!data.ok) { toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return; }
-      if (data.role !== 'admin') { toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return; }
+      if (!data.ok) {
+        if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
+        toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return;
+      }
+      if (data.role !== 'admin') {
+        if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
+        toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return;
+      }
       state.session.role = 'admin';
       state.session.token = idToken;
       state.session.email = claims.email;
@@ -169,6 +178,7 @@ const App = (() => {
       renderAll();
       toast('✓ ' + (claims.name || claims.email) + ' — เข้าสู่ระบบแล้ว', 'success');
     } catch (err) {
+      if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
       toast('Sign in ไม่สำเร็จ: ' + err.message, 'error');
     }
   }
