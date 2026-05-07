@@ -46,7 +46,7 @@ const App = (() => {
     settings: {
       sheetUrl: DEFAULT_SHEET_URL,
       secret: DEFAULT_SECRET,
-      googleClientId: '',
+      googleClientId: '155556775648-uf1ld89gffj6m4m1mbfgj1q0iis6c8nu.apps.googleusercontent.com',
     },
     session: {
       role: 'viewer',
@@ -1258,7 +1258,7 @@ const App = (() => {
 const SECRET = '';
 const SHEET_NAME = 'Workflows';
 const ADMIN_SHEET = 'AdminUsers';
-const GOOGLE_CLIENT_ID = ''; // ← ใส่ Client ID จาก Google Cloud Console
+const GOOGLE_CLIENT_ID = '155556775648-uf1ld89gffj6m4m1mbfgj1q0iis6c8nu.apps.googleusercontent.com';
 
 function doGet(e) {
   try {
@@ -1513,6 +1513,7 @@ function _json(obj) {
 
     // Initial render
     updateAuthUI();
+    initGoogleSignIn(state.settings.googleClientId);
     renderAll();
 
     // Auto-load from sheet if configured
