@@ -157,30 +157,47 @@ const App = (() => {
       return;
     }
     const btn = $('#btnSignIn');
+    const modalBtn = $('#btnModalSignIn');
     const btnLabel = btn?.querySelector('span');
-    if (btn) { btn.disabled = true; if (btnLabel) btnLabel.textContent = 'กำลังตรวจสอบ...'; }
+    const modalBtnLabel = modalBtn?.querySelector('span');
+    const setLoading = (on) => {
+      if (btn) { btn.disabled = on; if (btnLabel) btnLabel.textContent = on ? 'กำลังตรวจสอบ...' : 'Sign in with Google'; }
+      if (modalBtn) { modalBtn.disabled = on; if (modalBtnLabel) modalBtnLabel.textContent = on ? 'กำลังตรวจสอบ...' : 'Sign in with Google'; }
+    };
+    setLoading(true);
     try {
       const res = await fetch(state.settings.sheetUrl + '?action=checkRole&email=' + encodeURIComponent(claims.email));
       const data = await res.json();
       if (!data.ok) {
-        if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
+        setLoading(false);
         toast('ตรวจสอบสิทธิ์ไม่สำเร็จ: ' + (data.error || ''), 'error'); return;
       }
       if (data.role !== 'admin') {
-        if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
+        setLoading(false);
         toast('บัญชีนี้ไม่มีสิทธิ์ Admin', 'error'); return;
       }
       state.session.role = 'admin';
       state.session.token = idToken;
       state.session.email = claims.email;
       state.session.name = claims.name || claims.email;
+      closeSignInModal();
       updateAuthUI();
       renderAll();
       toast('✓ ' + (claims.name || claims.email) + ' — เข้าสู่ระบบแล้ว', 'success');
     } catch (err) {
-      if (btn) { btn.disabled = false; if (btnLabel) btnLabel.textContent = 'Sign in with Google'; }
+      setLoading(false);
       toast('Sign in ไม่สำเร็จ: ' + err.message, 'error');
     }
+  }
+
+  function openSignInModal() {
+    $('#signInModal').hidden = false;
+    $('#signInOverlay').hidden = false;
+  }
+
+  function closeSignInModal() {
+    $('#signInModal').hidden = true;
+    $('#signInOverlay').hidden = true;
   }
 
   function triggerSignIn() {
@@ -189,15 +206,7 @@ const App = (() => {
       if (state.settings.sheetUrl) switchView('settings');
       return;
     }
-    if (!window.google?.accounts?.id) {
-      toast('Google Sign-In ยังโหลดไม่เสร็จ ลองอีกครั้ง', 'error');
-      return;
-    }
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        google.accounts.id.renderButton(document.createElement('div'), {});
-      }
-    });
+    openSignInModal();
   }
 
   function signOut() {
@@ -213,6 +222,8 @@ const App = (() => {
     const adm = isAdmin();
     const fallback = $('#btnSignIn');
     if (fallback) fallback.style.display = adm ? 'none' : '';
+    const topSignIn = $('#btnTopSignIn');
+    if (topSignIn) topSignIn.hidden = adm;
     $('#userChip').hidden = !adm;
     const navSettings = $('#navSettings');
     if (navSettings) navSettings.hidden = !adm;
@@ -903,12 +914,19 @@ const App = (() => {
     if (!wf) return;
     _navWfId = id;
     renderStepNav();
+    $('#stepNavOverlay').hidden = false;
     $('#stepNav').hidden = false;
   }
 
   function closeStepNavigator() {
-    $('#stepNav').hidden = true;
-    _navWfId = null;
+    const nav = $('#stepNav');
+    nav.classList.add('is-closing');
+    $('#stepNavOverlay').hidden = true;
+    setTimeout(() => {
+      nav.classList.remove('is-closing');
+      nav.hidden = true;
+      _navWfId = null;
+    }, 280);
   }
 
   function renderStepNav() {
@@ -1511,7 +1529,14 @@ function _json(obj) {
       }
     });
     $('#btnSignIn').addEventListener('click', triggerSignIn);
+    $('#btnTopSignIn')?.addEventListener('click', triggerSignIn);
     $('#btnSignOut').addEventListener('click', signOut);
+    $('#btnCloseSignIn').addEventListener('click', closeSignInModal);
+    $('#signInOverlay').addEventListener('click', closeSignInModal);
+    $('#btnModalSignIn').addEventListener('click', () => {
+      if (!window.google?.accounts?.id) { toast('Google Sign-In ยังโหลดไม่เสร็จ ลองอีกครั้ง', 'error'); return; }
+      google.accounts.id.prompt();
+    });
     $('#btnSaveClientId').addEventListener('click', saveGoogleClientId);
     $('#btnAddAdmin').addEventListener('click', addAdminUser);
     $('#addAdminEmail').addEventListener('keydown', (e) => {
@@ -1568,6 +1593,7 @@ function _json(obj) {
 
     // Step navigator
     $('#btnCloseStepNav').addEventListener('click', closeStepNavigator);
+    $('#stepNavOverlay').addEventListener('click', closeStepNavigator);
     $('#btnNavEdit').addEventListener('click', () => { if (_navWfId) openWorkflowEditor(_navWfId); });
 
     // ESC to close

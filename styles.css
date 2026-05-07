@@ -111,20 +111,55 @@
   --sidebar-w: 260px;
 }
 
-/* Both data-theme values resolve to the same dark tokens */
+/* Light theme */
 [data-theme="light"] {
-  --bg:           var(--color-void-black);
-  --surface:      var(--color-deep-charcoal);
-  --surface-2:    var(--color-graphite-700);
-  --surface-3:    var(--color-graphite-600);
-  --surface-hover:var(--color-graphite-700);
-  --border:       var(--color-graphite-500);
-  --border-strong:var(--color-graphite-400);
-  --divider:      rgba(255, 255, 255, 0.06);
-  --text:         var(--color-snow);
-  --text-muted:   var(--color-slate-200);
-  --text-faint:   var(--color-slate-300);
-  --text-inverse: var(--color-void-black);
+  --bg:            #f5f4f2;
+  --surface:       #ffffff;
+  --surface-2:     #f0efed;
+  --surface-3:     #e8e7e5;
+  --surface-hover: #f0efed;
+  --border:        #dddbd8;
+  --border-strong: #c4c2bf;
+  --divider:       rgba(0, 0, 0, 0.08);
+
+  --text:          #1c1b1a;
+  --text-muted:    #484644;
+  --text-faint:    #8e8c8a;
+  --text-inverse:  #ffffff;
+
+  --orange:        #d94f1e;
+  --orange-hover:  #c44419;
+  --orange-active: #b03814;
+  --orange-soft:   rgba(217, 79, 30, 0.1);
+  --orange-soft-2: rgba(217, 79, 30, 0.18);
+  --orange-text:   #c44419;
+  --accent-glow:   rgba(217, 79, 30, 0.08);
+
+  --success:       #1a9655;
+  --success-soft:  rgba(26, 150, 85, 0.1);
+  --warning:       #b07a25;
+  --warning-soft:  rgba(176, 122, 37, 0.1);
+  --danger:        #cc3535;
+  --danger-soft:   rgba(204, 53, 53, 0.08);
+  --info:          #2476c7;
+  --info-soft:     rgba(36, 118, 199, 0.1);
+
+  --shadow-sm:     rgba(0, 0, 0, 0.06) 0px 2px 4px;
+  --shadow-md:     rgba(0, 0, 0, 0.1) 0px 4px 24px 0px,
+                   rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+  --shadow-lg:     rgba(0, 0, 0, 0.14) 0px 16px 48px 0px,
+                   rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  --shadow-orange: rgba(0, 0, 0, 0.1) 0px 4px 16px 0px;
+  --shadow-ring:   rgba(0, 0, 0, 0.1) 0px 0px 0px 1px;
+  --shadow-highlight: rgba(255, 255, 255, 0.8) 0px 1px 0px 0px inset,
+                      rgba(0, 0, 0, 0.12) 0px 0px 0px 1px,
+                      rgba(0, 0, 0, 0.04) 0px -1px 0px 0px inset;
+
+  --color-surface: #1c1b1a;
+}
+
+[data-theme="light"] .main {
+  background: var(--bg);
 }
 
 /* ============================================
@@ -1899,4 +1934,124 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================
+   THEME TOGGLE ICONS
+   ============================================ */
+.theme-toggle .icon-sun,
+[data-theme-toggle] .icon-sun { display: none; }
+.theme-toggle .icon-moon,
+[data-theme-toggle] .icon-moon { display: inline-flex; }
+html[data-theme="light"] .theme-toggle .icon-sun,
+html[data-theme="light"] [data-theme-toggle] .icon-sun { display: inline-flex; }
+html[data-theme="light"] .theme-toggle .icon-moon,
+html[data-theme="light"] [data-theme-toggle] .icon-moon { display: none; }
+
+/* ============================================
+   TOP-RIGHT AUTH ZONE
+   ============================================ */
+.top-auth-zone {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-5);
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+@media (max-width: 900px) { .top-auth-zone { display: none; } }
+
+/* ============================================
+   STEP NAVIGATOR — overlay + close animation
+   ============================================ */
+.step-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 6, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 29;
+  animation: fadeInOverlay 240ms var(--ease-out);
+}
+[data-theme="light"] .step-nav-overlay { background: rgba(0, 0, 0, 0.22); }
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+.step-nav.is-closing {
+  animation: slideOutRight 280ms var(--ease-out) forwards;
+}
+
+/* ============================================
+   SIGN-IN MODAL
+   ============================================ */
+.sign-in-modal-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+}
+.sign-in-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-10) var(--space-8) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+}
+.sign-in-modal-logo {
+  width: 48px; height: 48px;
+  color: var(--orange);
+  margin-bottom: var(--space-2);
+}
+.sign-in-modal-logo .logo { width: 48px; height: 48px; }
+.sign-in-modal-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+.sign-in-modal-sub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  max-width: 280px;
+  line-height: 1.5;
+  margin-bottom: var(--space-3);
+}
+.gsi-modal-btn-wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+.google-sign-in-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 300px;
+  padding: 10px var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-ring);
+  white-space: nowrap;
+}
+.google-sign-in-btn svg { flex-shrink: 0; }
+.google-sign-in-btn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-highlight);
+}
+.google-sign-in-btn:disabled { opacity: 0.6; cursor: wait; }
+.sign-in-modal-note {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  margin-top: var(--space-2);
 }
