@@ -754,13 +754,11 @@ const App = (() => {
 
   // ---------- Step Navigator ----------
   let _navWfId = null;
-  let _navStepIdx = 0;
 
   function openStepNavigator(id) {
     const wf = state.workflows.find((w) => w.id === id);
     if (!wf) return;
     _navWfId = id;
-    _navStepIdx = 0;
     renderStepNav();
     $('#stepNav').hidden = false;
   }
@@ -768,26 +766,11 @@ const App = (() => {
   function closeStepNavigator() {
     $('#stepNav').hidden = true;
     _navWfId = null;
-    _navStepIdx = 0;
-  }
-
-  function stepNavGo(delta) {
-    const wf = state.workflows.find((w) => w.id === _navWfId);
-    if (!wf) return;
-    const next = _navStepIdx + delta;
-    const total = (wf.steps || []).length;
-    if (next >= 0 && next < total) {
-      _navStepIdx = next;
-      renderStepNav();
-    }
   }
 
   function renderStepNav() {
     const wf = state.workflows.find((w) => w.id === _navWfId);
     if (!wf) return;
-
-    const steps = wf.steps || [];
-    const i = _navStepIdx;
 
     $('#navBadges').innerHTML = `${channelBadge(wf.channel)}${wf.category ? `<span class="badge">${escapeHtml(wf.category)}</span>` : ''}`;
     $('#navWfTitle').textContent = wf.name || 'ไม่มีชื่อ';
@@ -800,85 +783,58 @@ const App = (() => {
       descEl.hidden = true;
     }
 
+    const steps = wf.steps || [];
     if (steps.length === 0) {
-      $('#navCounter').textContent = 'ยังไม่มีหัวข้อย่อย';
       $('#navContent').innerHTML = '<div class="step-nav-empty">เรื่องนี้ยังไม่มีหัวข้อย่อย</div>';
-      $('#btnNavPrev').hidden = true;
-      $('#btnNavNext').hidden = true;
       return;
     }
 
-    const s = steps[i];
-    $('#navCounter').textContent = `หัวข้อย่อยที่ ${i + 1} จาก ${steps.length}`;
+    $('#navContent').innerHTML = `<div class="chain">${steps.map((s, i) => {
+      const isLast = i === steps.length - 1;
+      const ownerParts = [];
+      if (s.owner) ownerParts.push(`👤 ${escapeHtml(s.owner)}`);
+      if (s.duration) ownerParts.push(`📎 ${escapeHtml(s.duration)}`);
+      const ownerHtml = ownerParts.length ? `<div class="chain-meta">${ownerParts.join(' · ')}</div>` : '';
 
-    const prevBtn = $('#btnNavPrev');
-    const nextBtn = $('#btnNavNext');
+      const descHtml = s.description ? `<p class="chain-desc">${escapeHtml(s.description)}</p>` : '';
 
-    if (i > 0) {
-      prevBtn.hidden = false;
-      prevBtn.textContent = `← ${escapeHtml(steps[i - 1].title || 'ก่อนหน้า')}`;
-    } else {
-      prevBtn.hidden = true;
-    }
-
-    if (i < steps.length - 1) {
-      nextBtn.hidden = false;
-      nextBtn.textContent = `${escapeHtml(steps[i + 1].title || 'ถัดไป')} →`;
-    } else {
-      nextBtn.hidden = true;
-    }
-
-    const ownerParts = [];
-    if (s.owner) ownerParts.push(`👤 ${escapeHtml(s.owner)}`);
-    if (s.duration) ownerParts.push(`📎 ${escapeHtml(s.duration)}`);
-    const ownerHtml = ownerParts.length ? `<div class="step-nav-owner">${ownerParts.join(' · ')}</div>` : '';
-
-    const descHtml = s.description
-      ? `<p class="step-nav-desc">${escapeHtml(s.description)}</p>`
-      : '';
-
-    const checklist = s.checklist || [];
-    const checklistHtml = checklist.length ? `
-      <div class="step-nav-section">
-        <div class="step-nav-section-label">Checklist</div>
-        <div class="step-nav-checklist">
+      const checklist = s.checklist || [];
+      const checklistHtml = checklist.length ? `
+        <div class="chain-checklist">
           ${checklist.map((c, ci) => `
-            <label class="step-nav-check-item${c.done ? ' done' : ''}">
-              <input type="checkbox" data-nav-chk="${ci}" ${c.done ? 'checked' : ''} />
+            <label class="chain-check-item${c.done ? ' done' : ''}">
+              <input type="checkbox" data-step="${i}" data-chk="${ci}" ${c.done ? 'checked' : ''} />
               <span>${escapeHtml(c.text)}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>` : '';
+            </label>`).join('')}
+        </div>` : '';
 
-    const infoHtml = (s.tools || s.documents) ? `
-      <div class="step-nav-info-row">
-        ${s.tools ? `<div class="step-nav-info-item"><span class="step-nav-info-label">Tools / ระบบ</span><span class="step-nav-info-val">${escapeHtml(s.tools)}</span></div>` : ''}
-        ${s.documents ? `<div class="step-nav-info-item"><span class="step-nav-info-label">เอกสาร</span><span class="step-nav-info-val">${escapeHtml(s.documents)}</span></div>` : ''}
-      </div>` : '';
+      const infoHtml = (s.tools || s.documents) ? `
+        <div class="chain-info">
+          ${s.tools ? `<span><span class="chain-info-label">Tools</span>${escapeHtml(s.tools)}</span>` : ''}
+          ${s.documents ? `<span><span class="chain-info-label">เอกสาร</span>${escapeHtml(s.documents)}</span>` : ''}
+        </div>` : '';
 
-    const notesHtml = s.notes ? `
-      <div class="step-nav-notes">
-        <span class="step-nav-info-label">ข้อควรระวัง / หมายเหตุ</span>
-        <p>${escapeHtml(s.notes)}</p>
-      </div>` : '';
+      const notesHtml = s.notes ? `<div class="chain-notes">${escapeHtml(s.notes)}</div>` : '';
 
-    $('#navContent').innerHTML = `
-      <div class="step-nav-card">
-        <h2 class="step-nav-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</h2>
-        ${ownerHtml}
-        ${descHtml}
-        ${checklistHtml}
-        ${infoHtml}
-        ${notesHtml}
-      </div>`;
+      return `
+        <div class="chain-step">
+          <div class="chain-node">
+            <div class="chain-number">${i + 1}</div>
+            ${!isLast ? '<div class="chain-line"></div>' : ''}
+          </div>
+          <div class="chain-content">
+            <h3 class="chain-title">${escapeHtml(s.title || 'ยังไม่มีชื่อ')}</h3>
+            ${ownerHtml}${descHtml}${checklistHtml}${infoHtml}${notesHtml}
+          </div>
+        </div>`;
+    }).join('')}</div>`;
 
-    $$('[data-nav-chk]', $('#navContent')).forEach((cb) => {
+    $$('[data-chk]', $('#navContent')).forEach((cb) => {
       cb.addEventListener('change', () => {
         const wf = state.workflows.find((w) => w.id === _navWfId);
         if (!wf) return;
-        wf.steps[_navStepIdx].checklist[Number(cb.dataset.navChk)].done = cb.checked;
-        renderStepNav();
+        wf.steps[Number(cb.dataset.step)].checklist[Number(cb.dataset.chk)].done = cb.checked;
+        cb.closest('.chain-check-item').classList.toggle('done', cb.checked);
       });
     });
   }
@@ -1380,16 +1336,10 @@ function _json(obj) {
 
     // Step navigator
     $('#btnCloseStepNav').addEventListener('click', closeStepNavigator);
-    $('#btnNavPrev').addEventListener('click', () => stepNavGo(-1));
-    $('#btnNavNext').addEventListener('click', () => stepNavGo(1));
     $('#btnNavEdit').addEventListener('click', () => { if (_navWfId) openWorkflowEditor(_navWfId); });
 
-    // ESC / arrow keys
+    // ESC to close
     document.addEventListener('keydown', (e) => {
-      if (!$('#stepNav').hidden) {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); stepNavGo(-1); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); stepNavGo(1); }
-      }
       if (e.key === 'Escape') {
         if (!$('#stepModal').hidden) closeStepModal(false);
         else if (!$('#adminModal').hidden) closeAdminModal();
