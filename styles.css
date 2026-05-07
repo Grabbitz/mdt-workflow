@@ -17,8 +17,8 @@
   --color-slate-200:     #9c9c9d;
   --color-ash-50:        #e6e6e6;
   --color-snow:          #ffffff;
-  --color-ember-red:     #ff6363;
-  --color-ember-dark:    #452324;
+  --color-ember-red:     #ff6c0c;
+  --color-ember-dark:    #4a2508;
   --color-mint-signal:   #59d499;
   --color-sky-signal:    #56c2ff;
   --color-surface:       #ffffff; /* SVG stroke compat */
@@ -39,14 +39,14 @@
   --text-faint:   var(--color-slate-300);
   --text-inverse: var(--color-void-black);
 
-  /* ── Accent: ember red (status / logo only) ─ */
+  /* ── Accent: vivid orange (status / logo only) ─ */
   --orange:       var(--color-ember-red);
-  --orange-hover: #ff7a7a;
-  --orange-active:#ff4444;
-  --orange-soft:  rgba(255, 99, 99, 0.08);
-  --orange-soft-2:rgba(255, 99, 99, 0.14);
+  --orange-hover: #ff8a33;
+  --orange-active:#e85f00;
+  --orange-soft:  rgba(255, 108, 12, 0.09);
+  --orange-soft-2:rgba(255, 108, 12, 0.16);
   --orange-text:  var(--color-ember-red);
-  --accent-glow:  rgba(255, 99, 99, 0.12);
+  --accent-glow:  rgba(255, 108, 12, 0.16);
 
   /* ── Semantic states ──────────────────────── */
   --success:      var(--color-mint-signal);
@@ -128,13 +128,13 @@
   --text-faint:    #8e8c8a;
   --text-inverse:  #ffffff;
 
-  --orange:        #d94f1e;
-  --orange-hover:  #c44419;
-  --orange-active: #b03814;
-  --orange-soft:   rgba(217, 79, 30, 0.1);
-  --orange-soft-2: rgba(217, 79, 30, 0.18);
-  --orange-text:   #c44419;
-  --accent-glow:   rgba(217, 79, 30, 0.08);
+  --orange:        #ff6c0c;
+  --orange-hover:  #e85f00;
+  --orange-active: #c95000;
+  --orange-soft:   rgba(255, 108, 12, 0.12);
+  --orange-soft-2: rgba(255, 108, 12, 0.2);
+  --orange-text:   #d95700;
+  --accent-glow:   rgba(255, 108, 12, 0.1);
 
   --success:       #1a9655;
   --success-soft:  rgba(26, 150, 85, 0.1);
@@ -898,10 +898,10 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
-.badge-orange  { background: var(--orange-soft); color: var(--orange-text); border-color: rgba(255,99,99,0.2); }
+.badge-orange  { background: var(--orange-soft); color: var(--orange-text); border-color: rgba(255, 108, 12, 0.2); }
 .badge-success { background: var(--success-soft); color: var(--success); border-color: rgba(89,212,153,0.2); }
 .badge-warning { background: var(--warning-soft); color: var(--warning); border-color: rgba(224,161,75,0.2); }
-.badge-danger  { background: var(--danger-soft);  color: var(--danger); border-color: rgba(255,99,99,0.2); }
+.badge-danger  { background: var(--danger-soft);  color: var(--danger); border-color: rgba(255, 108, 12, 0.2); }
 .badge-info    { background: var(--info-soft);    color: var(--info); border-color: rgba(86,194,255,0.2); }
 
 .wf-card-desc {
@@ -1559,7 +1559,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .canvas-workflow-item.active {
   background: var(--surface-2);
-  border-color: rgba(255, 99, 99, 0.55);
+  border-color: rgba(255, 108, 12, 0.55);
   box-shadow: inset 2px 0 0 var(--orange);
 }
 .canvas-workflow-item strong {
@@ -1630,10 +1630,10 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .canvas-link-path {
   fill: none;
-  stroke: rgba(255, 99, 99, 0.72);
+  stroke: rgba(255, 108, 12, 0.72);
   stroke-width: 2;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 8px rgba(255, 99, 99, 0.18));
+  filter: drop-shadow(0 0 8px rgba(255, 108, 12, 0.18));
 }
 .canvas-worktree-grid {
   position: relative;
@@ -1709,7 +1709,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .canvas-workflow-node.active {
   border-color: var(--orange);
-  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.2), var(--shadow-ring);
+  box-shadow: 0 0 0 1px rgba(255, 108, 12, 0.2), var(--shadow-ring);
 }
 .canvas-link-list {
   position: relative;
@@ -1726,8 +1726,8 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   max-width: 360px;
   padding: 4px var(--space-2);
   border-radius: var(--radius-full);
-  background: rgba(255, 99, 99, 0.1);
-  border: 1px solid rgba(255, 99, 99, 0.24);
+  background: rgba(255, 108, 12, 0.1);
+  border: 1px solid rgba(255, 108, 12, 0.24);
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
@@ -1805,7 +1805,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .canvas-step-node.active {
   border-color: var(--orange);
-  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.2), var(--shadow-ring);
+  box-shadow: 0 0 0 1px rgba(255, 108, 12, 0.2), var(--shadow-ring);
 }
 .canvas-step-icon {
   width: 36px;
@@ -2250,7 +2250,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .connection-status.show  { display: block; }
 .connection-status.success { background: var(--success-soft); color: var(--success); border: 1px solid rgba(89,212,153,0.2); }
-.connection-status.error   { background: var(--danger-soft);  color: var(--danger);  border: 1px solid rgba(255,99,99,0.2); }
+.connection-status.error   { background: var(--danger-soft);  color: var(--danger);  border: 1px solid rgba(255, 108, 12, 0.2); }
 .connection-status.pending { background: var(--info-soft);    color: var(--info); }
 
 .setup-guide ol { list-style: none; padding: 0; }
@@ -2614,7 +2614,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   box-shadow: var(--shadow-highlight);
 }
 .toast.toast-success { background: var(--success-soft); color: var(--success); border-color: rgba(89,212,153,0.2); }
-.toast.toast-error   { background: var(--danger-soft);  color: var(--danger);  border-color: rgba(255,99,99,0.2); }
+.toast.toast-error   { background: var(--danger-soft);  color: var(--danger);  border-color: rgba(255, 108, 12, 0.2); }
 .toast.toast-orange  { background: var(--surface-3);    color: var(--text); }
 
 @keyframes toastIn  { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }

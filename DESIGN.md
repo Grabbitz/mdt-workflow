@@ -3,7 +3,7 @@
 
 **Theme:** dark
 
-Raycast lives in near-total darkness — a #040506 void where UI surfaces emerge as barely-lighter charcoal strata rather than conventional cards. The signature move is depth through shadow layering: the keyboard-key shadow `rgba(0,0,0,0.4) 0px 1.5px 0.5px 2.5px, rgb(0,0,0) 0px 0px 0.5px 1px, rgba(0,0,0,0.25) 0px 2px 1px 1px inset, rgba(255,255,255,0.2) 0px 1px 1px 1px inset` makes interactive elements feel physically pressable — a tactile metaphor for keyboard shortcuts. The brand red (#FF6363) appears sparingly as a status signal and logo accent rather than a CTA color; primary download buttons are a near-white #E6E6E6 pill on black — inverted convention. Radial gradients with blue and purple cores bleed into the dark canvas at very low opacity, creating the impression of colored light sources behind frosted obsidian. Type is Inter with tight negative tracking at display sizes, shifting to loose positive tracking on micro labels and badges — creating a two-register system where headlines contract and metadata breathes.
+Raycast lives in near-total darkness — a #040506 void where UI surfaces emerge as barely-lighter charcoal strata rather than conventional cards. The signature move is depth through shadow layering: the keyboard-key shadow `rgba(0,0,0,0.4) 0px 1.5px 0.5px 2.5px, rgb(0,0,0) 0px 0px 0.5px 1px, rgba(0,0,0,0.25) 0px 2px 1px 1px inset, rgba(255,255,255,0.2) 0px 1px 1px 1px inset` makes interactive elements feel physically pressable — a tactile metaphor for keyboard shortcuts. The brand orange (#FF6C0C) appears sparingly as a status signal and logo accent rather than a CTA color; primary download buttons are a near-white #E6E6E6 pill on black — inverted convention. Radial gradients with blue and purple cores bleed into the dark canvas at very low opacity, creating the impression of colored light sources behind frosted obsidian. Type is Inter with tight negative tracking at display sizes, shifting to loose positive tracking on micro labels and badges — creating a two-register system where headlines contract and metadata breathes.
 
 ## Tokens — Colors
 
@@ -19,8 +19,8 @@ Raycast lives in near-total darkness — a #040506 void where UI surfaces emerge
 | Slate 200 | `#9c9c9d` | `--color-slate-200` | Tertiary text, muted links, placeholder-level labels |
 | Ash 50 | `#e6e6e6` | `--color-ash-50` | Primary download/CTA button background — warm near-white on black for maximum contrast without pure white aggression |
 | Snow | `#ffffff` | `--color-snow` | Primary text on dark surfaces, nav links, headline text, icon strokes, border highlights |
-| Ember Red | `#ff6363` | `--color-ember-red` | Observed in body borderColor, other backgroundColor, other fill. |
-| Ember Dark | `#452324` | `--color-ember-dark` | Observed in other backgroundColor, other borderColor. |
+| Vivid Orange | `#ff6c0c` | `--color-ember-red` | Brand accent for logo, active states, and small status signals. |
+| Ember Dark | `#4a2508` | `--color-ember-dark` | Dark orange-tinted support surface for soft warning/error states. |
 | Mint Signal | `#59d499` | `--color-mint-signal` | Observed in other backgroundColor. Semantic/state role was not supported by extracted badge/input evidence. |
 | Sky Signal | `linear-gradient(135deg, rgb(86, 194, 255) 0%, rgb(19, 138, 242) 100%)` | `--color-sky-signal` | Observed in other backgroundColor. Semantic/state role was not supported by extracted badge/input evidence.; Hero gradient highlight — linear-gradient(135deg, #56c2ff 0%, #138af2 100%) used for product feature illustration accents |
 | Nebula Glow | `radial-gradient(84.6% 73.49% at 50% 26.51%, rgba(4, 63, 150, 0.7), rgba(6, 18, 37, 0.25))` | `--color-nebula-glow` | Radial section atmosphere gradient — low-opacity blue bloom behind hero and feature sections |
@@ -191,7 +191,7 @@ Transparent background, border-radius 86px (full oval), padding 20px, border rgb
 ### Ember Status Indicator
 **Role:** Colored dot or label for status signals inside product UI
 
-Background #FF6363 for red states, #59D499 for green online, #56C2FF for blue info. Border-radius 99999px (circular). 8px diameter. These appear inside the simulated app UI screenshots to represent clipboard colors, status dots, or category tags.
+Background #FF6C0C for orange status states, #59D499 for green online, #56C2FF for blue info. Border-radius 99999px (circular). 8px diameter. These appear inside the simulated app UI screenshots to represent clipboard colors, status dots, or category tags.
 
 ### Section Atmosphere Backdrop
 **Role:** Per-section colored radial glow behind content
@@ -212,7 +212,7 @@ Full-bleed radial gradient positioned at top-center: `radial-gradient(84.6% 73.4
 ### Don't
 - Do not use any colored backgrounds for section containers — all surface backgrounds must be from the #040506 → #1B1C1 neutral stack only
 - Do not apply border-radius above 20px to cards — the design uses 8px, 11px, 16px, 20px; rounder forms break the precision instrument aesthetic
-- Do not use #FF6363 as a button fill or large background — it appears only as a small status dot, icon accent, or single-word label text
+- Do not use #FF6C0C as a broad button fill or large background — it appears only as a small status dot, icon accent, or single-word label text
 - Do not use white (#FFFFFF) as a button background — the primary action uses #E6E6E6 specifically; pure white reads as system/OS chrome at this scale
 - Do not use positive letter-spacing on headings above 24px — all display and heading text must track neutral-to-negative
 - Do not create dividers between sections using horizontal rules or color changes — section separation happens through 80px vertical gaps and radial gradient shifts only
@@ -253,7 +253,7 @@ Max-width ~1200px centered on wide viewports, but hero section is full-bleed dar
 - background (canvas): #040506
 - surface (card): #07080a
 - border: #363739 (or rgba(255,255,255,0.06) for subtle)
-- accent/brand: #FF6363 (status and logo only)
+- accent/brand: #FF6C0C (status and logo only)
 - primary action: #e6e6e6 (filled action)
 
 **Example Component Prompts**
@@ -262,7 +262,7 @@ Max-width ~1200px centered on wide viewports, but hero section is full-bleed dar
 
 2. **Feature Card Grid**: 3-column grid with 15px gap. Each card: transparent background, border-radius 16px, padding 24px, border 1px solid #222225. Icon area 32px × 32px, icon color #6A6B6C. Card title at 20px Inter weight 600, #FFFFFF. Body text at 14px Inter weight 400, #6A6B6C, line-height 1.57.
 
-3. **Navigation Bar**: Fixed top, background #07080a, border-bottom 1px solid #1b1c1e, max-width 1200px centered, height 52px. Logo left (red flame icon #FF6363 + 'Raycast' text #FFFFFF Inter 14px weight 600). Center nav links at 14px Inter weight 400, #9C9C9D, gap 24px. Right: 'Log in' text link #9C9C9D + Download button #E6E6E6 bg, #2F3031 text, 8px radius, 8px 12px padding.
+3. **Navigation Bar**: Fixed top, background #07080a, border-bottom 1px solid #1b1c1e, max-width 1200px centered, height 52px. Logo left (orange flame icon #FF6C0C + 'Raycast' text #FFFFFF Inter 14px weight 600). Center nav links at 14px Inter weight 400, #9C9C9D, gap 24px. Right: 'Log in' text link #9C9C9D + Download button #E6E6E6 bg, #2F3031 text, 8px radius, 8px 12px padding.
 
 4. **Dark Badge / Version Chip**: Background #1b1c1e, text #FFFFFF, border-radius 6px, padding 0px 6px, Inter 12px weight 500, letter-spacing +0.048px. Use for 'v1.104.14', 'macOS 13+', category labels.
 
@@ -290,7 +290,7 @@ Rule: All section backgrounds must use transparent-to-transparent radial gradien
 - **Vercel** — Identical near-white CTA buttons on black canvas, same monochromatic shadow system, same Inter-on-dark typographic approach
 - **Arc Browser** — Shares the 'app as hero' pattern — product UI screenshot as the primary marketing visual, dark wrapper, no lifestyle photography
 - **Fig (Withfig)** — Terminal/launcher aesthetic: dark mode, monospaced type for code snippets, radial glow gradients as section atmosphere, near-black surface stack
-- **Warp Terminal** — Dark productivity tool with ember/red brand accent on void-black canvas, same keyboard-centric visual metaphor, identical monochrome shadow philosophy
+- **Warp Terminal** — Dark productivity tool with ember/orange brand accent on void-black canvas, same keyboard-centric visual metaphor, identical monochrome shadow philosophy
 
 ## Quick Start
 
@@ -309,8 +309,8 @@ Rule: All section backgrounds must use transparent-to-transparent radial gradien
   --color-slate-200: #9c9c9d;
   --color-ash-50: #e6e6e6;
   --color-snow: #ffffff;
-  --color-ember-red: #ff6363;
-  --color-ember-dark: #452324;
+  --color-ember-red: #ff6c0c;
+  --color-ember-dark: #4a2508;
   --color-mint-signal: #59d499;
   --color-sky-signal: #56c2ff;
   --gradient-sky-signal: linear-gradient(135deg, rgb(86, 194, 255) 0%, rgb(19, 138, 242) 100%);
@@ -438,8 +438,8 @@ Rule: All section backgrounds must use transparent-to-transparent radial gradien
   --color-slate-200: #9c9c9d;
   --color-ash-50: #e6e6e6;
   --color-snow: #ffffff;
-  --color-ember-red: #ff6363;
-  --color-ember-dark: #452324;
+  --color-ember-red: #ff6c0c;
+  --color-ember-dark: #4a2508;
   --color-mint-signal: #59d499;
   --color-sky-signal: #56c2ff;
   --color-nebula-glow: #043f96;
