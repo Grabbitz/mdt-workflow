@@ -5,7 +5,7 @@
 const App = (() => {
   // ---------- Default Config ----------
   // ฝัง Web App URL ไว้ให้แอปเชื่อม Google Sheet ได้ทันที
-  const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz5-5A7wQrx8q0Nra9easWHfaamck8XSeicxugrhllj1m3GD5uU4uOsgY78qJUkhEBD-Q/exec';
+  const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzrR1m8CF5frMfD-eA56vtLaPZFGORoq-b5LhjTDU7iKi1j5BqNQIzIKpjC39sZNPJIHQ/exec';
   const DEFAULT_SECRET = '';
   const MT_CHANNELS = [
     'B2S',
